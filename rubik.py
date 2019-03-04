@@ -71,10 +71,7 @@ class State:
 
 
 def goal_test(s):
-
-    return s.cube.front == np.ones((3, 3)) * 0 and s.cube.back == np.ones((3, 3)) * 1 and  \
-           s.cube.up == np.ones((3, 3)) * 2 and  s.cube.down == np.ones((3, 3)) * 3 and\
-           s.cube.left == np.ones((3, 3)) * 4 and  s.cube.right == np.ones((3, 3)) * 5
+    # TODO Flatten all matrix and check that length of set equal 1
 
 def goal_message(s):
     return "You Solve the Puzzle!"
