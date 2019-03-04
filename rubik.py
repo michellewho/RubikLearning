@@ -11,6 +11,10 @@ PROBLEM_DESC = \
     Python 3 constructs and has been tested with Python 3.6.
     '''
 
+import numpy as np
+import random
+import copy
+
 # </METADATA>
 
 # <COMMON_DATA>
@@ -26,9 +30,16 @@ ORDER = ['Front', 'Back', 'Up', 'Down', 'Left', 'Right']
 
 # <COMMON_CODE>
 class State:
-    def __init__(self, d=None):
-        cube = [[0,0,0,0], [1,1,1,1], [2,2,2,2], [3,3,3,3], [4,4,4,4], [5,5,5,5]]
-        self.b = cube
+    def __init__(self, cube=None):
+        if cube == None:
+            cube = {}
+            cube.front = np.ones((3, 3)) * 0
+            cube.back = np.ones((3, 3)) * 1
+            cube.up = np.ones((3, 3)) * 2
+            cube.down = np.ones((3, 3)) * 3
+            cube.left = np.ones((3, 3)) * 4
+            cube.right = np.ones((3, 3)) * 5
+        self.cube = cube
 
     def __eq__(self, s2):
         return cmp(self.b, s2.b) == 0
@@ -49,74 +60,30 @@ class State:
         # Performs an appropriately deep copy of a state,
         # for use by operators in creating new states.
         news = State({})
-        news.b = [row[:] for row in self.b]
+        news.cube = copy.deepcopy(self.cube)
         return news
 
-    def find_void_location(self):
-        '''Return the (vi, vj) coordinates of the void.
-        vi is the row index of the void, and vj is its column index.'''
-        for i in range(3):
-            for j in range(3):
-                if self.b[i][j] == 0:
-                    return (i, j)
-        raise Exception("No void location in state: " + str(self))
-
-    def can_move(self, dir):
-        '''Tests whether it's legal to move a tile that is next
-           to the void in the direction given.'''
-        (vi, vj) = self.find_void_location()
-        if dir == 'N': return vi < 2
-        if dir == 'S': return vi > 0
-        if dir == 'W': return vj < 2
-        if dir == 'E': return vj > 0
-        raise Exception("Illegal direction in can_move: " + str(dir))
-
-    def move(self, dir):
-        '''Assuming it's legal to make the move, this computes
-           the new state resulting from moving a tile in the
-           given direction, into the void.'''
-        news = self.copy()  # start with a deep copy.
-        (vi, vj) = self.find_void_location()
-        b = news.b
-        if dir == 'N':
-            b[vi][vj] = b[vi + 1][vj]
-            b[vi + 1][vj] = 0
-        if dir == 'S':
-            b[vi][vj] = b[vi - 1][vj]
-            b[vi - 1][vj] = 0
-        if dir == 'W':
-            b[vi][vj] = b[vi][vj + 1]
-            b[vi][vj + 1] = 0
-        if dir == 'E':
-            b[vi][vj] = b[vi][vj - 1]
-            b[vi][vj - 1] = 0
-        return news  # return new state
-
-    def edge_distance(self, s2):
-        return 1.0  # Warning, this is only correct when
-        # self and s2 are neighboring states.
-        # We assume that is the case.  This method is
-        # provided so that problems having all move costs equal to
-        # don't have to be handled as a special case in the algorithms.
+    def shuffle_cube(self):
+        for i in range(100):
+            s = self
+            s = OPERATORS[random.randint(0, len(OPERATORS))].apply(s)
+        return s
 
 
 def goal_test(s):
-    '''If all the b values are in order, then s is a goal state.'''
-    return s == State([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
 
+    return s.cube.front == np.ones((3, 3)) * 0 and s.cube.back == np.ones((3, 3)) * 1 and  \
+           s.cube.up == np.ones((3, 3)) * 2 and  s.cube.down == np.ones((3, 3)) * 3 and\
+           s.cube.left == np.ones((3, 3)) * 4 and  s.cube.right == np.ones((3, 3)) * 5
 
 def goal_message(s):
-    return "You've got all eight straight. Great!"
+    return "You Solve the Puzzle!"
 
 
 class Operator:
-    def __init__(self, name, precond, state_transf):
+    def __init__(self, name, state_transf):
         self.name = name
-        self.precond = precond
         self.state_transf = state_transf
-
-    def is_applicable(self, s):
-        return self.precond(s)
 
     def apply(self, s):
         return self.state_transf(s)
@@ -133,24 +100,25 @@ try:
     init_state_string = sys.argv[2]
     print("Initial state as given on the command line: " + init_state_string)
     init_state_list = eval(init_state_string)
-except:
-    init_state_list = [[3, 1, 2], [0, 5, 8], [4, 6, 7]]
-    print("Using default initial state list: " + str(init_state_list))
-    print(" (To use a specific initial state, enter it on the command line, e.g.,")
-    print("python3 UCS.py EightPuzzle '[[3, 1, 2], [0, 4, 5], [6, 7, 8]]'")
+    ## TODO Make cube from passed in list
 
-CREATE_INITIAL_STATE = lambda: State(init_state_list)
+except:
+    state = State()
+    state = state.shuffle_cube()
+    CREATE_INITIAL_STATE = state
+
 # </INITIAL_STATE>
 
 # <OPERATORS>
-directions = ['N', 'E', 'W', 'S']
-OPERATORS = [Operator("Move a tile " + str(dir) + " into the void",
-                      lambda s, dir1=dir: s.can_move(dir1),
-                      # The default value construct is needed
-                      # here to capture the value of dir
-                      # in each iteration of the list comp. iteration.
-                      lambda s, dir1=dir: s.move(dir1))
-             for dir in directions]
+
+OPERATORS = []
+OPERATORS.append(Operator("Rotate Up", lambda s: up(s)))
+OPERATORS.append(Operator("Rotate Down", lambda s: down(s)))
+OPERATORS.append(Operator("Rotate Left", lambda s: left(s)))
+OPERATORS.append(Operator("Rotate Right", lambda s: right(s)))
+OPERATORS.append(Operator("Rotate Front", lambda s: front(s)))
+OPERATORS.append(Operator("Rotate Back", lambda s: back(s)))
+
 # </OPERATORS>
 
 # <GOAL_TEST> (optional)
@@ -160,4 +128,105 @@ GOAL_TEST = lambda s: goal_test(s)
 # <GOAL_MESSAGE_FUNCTION> (optional)
 GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 # </GOAL_MESSAGE_FUNCTION>
+
+
+# OPERATORS
+def up(s):
+    ns = s.copy()
+    ns.cube.up = np.rot90(ns.cube.up, 3)
+
+    front = ns.cube.front[0]
+    left = ns.cube.left[0]
+    right = ns.cube.right[0]
+    back = ns.cube.back[0]
+
+    ns.cube.front[0] = right
+    ns.cube.left[0] = front
+    ns.cube.right[0] = back
+    ns.cube.back[0] = left
+
+    return ns
+
+
+def front(s):
+    ns = s.copy()
+    ns.cube.front = np.rot90(ns.cube.front, 3)
+    up = ns.cube.up[2]
+    down = ns.cube.down[0]
+    right = ns.cube.right[:, 0]
+    left = ns.cube.left[:, 2]
+
+    ns.cube.up[2] = left
+    ns.cube.down[0] = right
+    ns.cube.right[:, 0] = up
+    ns.cube.left[:, 2] = down
+
+    return ns
+
+
+def back(s):
+    ns = s.copy()
+    ns.cube.back = np.rot90(ns.cube.back, 3)
+    up = ns.cube.up[0]
+    down = ns.cube.down[2]
+    right = ns.cube.right[:, 0]
+    left = ns.cube.left[:, 2]
+
+    ns.cube.up[0] = left
+    ns.cube.down[2]= right
+    ns.cube.right[:,0] = up
+    ns.cube.left[:.2]  = down
+
+    return ns
+
+
+def down(s):
+    ns = s.copy()
+    ns.cube.down = np.rot90(ns.cube.down, 3)
+
+    front = ns.cube.front[2]
+    left =  ns.cube.left[2]
+    right =  ns.cube.right[2]
+    back = ns.cube.back[2]
+
+    ns.cube.front[2] = right
+    ns.cube.left[2] = front
+    ns.cube.right[2] = back
+    ns.cube.back[2] = left
+
+    return ns
+
+def left(s):
+    ns = s.copy()
+    ns.cube.left = np.rot90(ns.cube.left, 3)
+
+    up = ns.cube.up[:,2]
+    back = ns.cube.back[:,0]
+    down = ns.cube.down[:,2]
+    front = ns.cube.front[:,2]
+
+    ns.cube.up[:, 2] = front
+    ns.cube.back[:, 0] = up
+    ns.cube.down[:, 2] = back
+    ns.cube.front[:.2] = down
+
+    return ns
+
+
+
+def right(s):
+    ns = s.copy()
+    ns.cube.right = np.rot90(ns.cube.right, 3)
+
+    back = ns.cube.back[:,2]
+    up = ns.cube.up[:,0]
+    front = ns.cube.front[:,0]
+    down = ns.cube.down[:, 0]
+
+    ns.cube.back[:, 2] = down
+    ns.cube.up[:, 0] = back
+    ns.cube.front[:, 0] = up
+    ns.cube.down[:, 0] = front
+
+    return ns
 
