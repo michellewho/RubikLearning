@@ -71,10 +71,21 @@ class State:
 
 
 def goal_test(s):
-    # TODO Flatten all matrix and check that length of set equal 1
-
+    if len(set(s.cube.front.flatten())) > 1:
+        return False
+    if len(set(s.cube.back.flatten())) > 1:
+        return False
+    if len(set(s.cube.up.flatten())) > 1:
+        return False
+    if len(set(s.cube.down.flatten())) > 1:
+        return False
+    if len(set(s.cube.left.flatten())) > 1:
+        return False
+    if len(set(s.cube.right.flatten())) > 1:
+        return False
+    return True
 def goal_message(s):
-    return "You Solve the Puzzle!"
+    return "You Solved the Puzzle!"
 
 
 class Operator:
