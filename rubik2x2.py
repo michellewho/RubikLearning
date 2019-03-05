@@ -261,7 +261,7 @@ class MDP_rubik:
     def take_action(self, a):
         for operator in self.OPERATORS:
             if operator.name == a:
-                self.curr_state = operator.apply(self.curr_state)
+                return operator.apply(self.curr_state)
 
     def generate_succesors(self, state):
         if state in self.state_sucessor_dict:
@@ -269,10 +269,50 @@ class MDP_rubik:
         successors = []
         for operator in self.OPERATORS:
             ns = operator.apply(state)
-            self.all_states.append(ns)
+            self.all_states.add(ns)
             successors.append(ns)
         self.state_sucessor_dict[state] = successors
 
+    def init_q_learn(self):
+        self.QValues = {}
+        self.visit_count = {}
+        for s in self.all_states:
+            for a in self.ACTIONS:
+                self.QValues[(s, a)] = 0
+                self.visit_count[(s, a)] = 0
+
+    def get_best_action(self,s):
+        best_action = ""
+        max_value = float("-inf")
+        for a in self.ACTIONS:
+            if self.QValues[(s,a)] > max_value:
+                best_action = a
+                max_value = self.QValues[(s,a)]
+        return best_action
+
+    def choose_action(self, s, learning_bias):
+        if random.random() < learning_bias:
+            return self.ACTIONS[random.randint(0, 5)]
+        return self.get_best_action(s)
+
+    def calculate_learning_rate(self, s, a):
+        return 1 / self.visit_count.get(s, a)
+
+
+    def calculate_Q(self,s ,a ,discount, learning_bias):
+        curr_q = self.QValues[(s, a)]
+        learning_rate = self.calculate_learning_rate(s, a)
+        #TODO: Learn how to do this stuff
+
+    def QLearn(self, iterations, discount, learning_bias):
+        self.init_q_learn()
+        for i in range(iterations):
+            self.curr_state = self.start_state
+            while not goal_test(self.curr_state):
+                s = self.curr_state
+                a = self.choose_action(s, learning_bias)
+                self.visit_count[(s, a)] += 1
+                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias)
 
 
     def generate_all_states(self):
