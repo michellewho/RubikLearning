@@ -43,12 +43,7 @@ class State:
         self.cube = cube
 
     def __eq__(self, s2):
-        return np.array_equal(self.cube["front"], s2.cube["front"]) and \
-               np.array_equal(self.cube["back"], s2.cube["back"]) and \
-               np.array_equal(self.cube["up"], s2.cube["up"]) and \
-               np.array_equal(self.cube["down"], s2.cube["down"]) and \
-               np.array_equal(self.cube["left"], s2.cube["left"]) and \
-               np.array_equal(self.cube["right"], s2.cube["right"])
+        # TODO fix equal to not care what side it is on
 
     def __str__(self):
         # Produces a textual description of a state.
@@ -338,7 +333,7 @@ class MDP_rubik:
             for state in L:
                 if state not in CLOSED:
                     OPEN.append(state)
-            print(len(self.all_states))
+            print(len(OPEN))
     def getPolicyDict(self):
         self.opt_policy = {}
         for state in self.all_states:
