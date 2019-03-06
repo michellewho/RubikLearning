@@ -207,10 +207,10 @@ def left_op(s):
     down = np.copy(ns.cube["down"][:, 0])
     front = np.copy(ns.cube["front"][:, 0])
 
-    ns.cube["up"][:, 1] = back
-    ns.cube["back"][:, 0] = down
-    ns.cube["down"][:, 1] = front
-    ns.cube["front"][:, 1] = up
+    ns.cube["up"][:, 0] = back
+    ns.cube["back"][:, 1] = down
+    ns.cube["down"][:, 0] = front
+    ns.cube["front"][:, 0] = up
 
     return ns
 
@@ -224,10 +224,10 @@ def right_op(s):
     front = np.copy(ns.cube["front"][:, 1])
     down = np.copy(ns.cube["down"][:, 1])
 
-    ns.cube["back"][:, 1] = up
-    ns.cube["up"][:, 0] = front
-    ns.cube["front"][:, 0] = down
-    ns.cube["down"][:, 0] = back
+    ns.cube["back"][:, 0] = up
+    ns.cube["up"][:, 1] = front
+    ns.cube["front"][:, 1] = down
+    ns.cube["down"][:, 1] = back
 
     return ns
 
