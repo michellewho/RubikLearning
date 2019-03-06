@@ -226,6 +226,75 @@ def right_op(s):
 
     return ns
 
+# Features
+# check corners
+def corners(s):
+    for key, value in s.cube.items():
+        face = s.cube[key]
+        if len(set(face[::face.shape[0] - 1, ::face.shape[1] - 1].flatten())) > 1:
+            return 0
+    return 1
+
+# check middle horizontal layer -- not plausible for 2x2?
+def horiz_middle(s):
+    for key, value in s.cube.items():
+        face = s.cube[key]
+        if len(set(face[1].flatten())) > 1:
+            return 0
+    return 1
+
+# check middle vertical layer -- also not plausible for 2x2?
+def vert_middle(s):
+    for key, value in s.cube.items():
+        face = s.cube[key]
+        if len(set(face[:,1].flatten())) > 1:
+            return 0
+    return 1
+
+# check to see if random tile matches middle tile -- also not plausible for 2x2?
+def random_square_match(s):
+    for key, value in s.cube.items():
+        m = 1
+        n = 1
+        face = s.cube[key]
+        while (m == 1 and n == 1):
+            m = random.randint(0, len(face))
+            n = random.randint(0, len(face))
+
+        face = s.cube[key]
+        if face[1, 1] == face[m, n]:
+            return 0
+    return 1
+
+# check to see if random tile on each face is on correct side
+def check_random_tile(s):
+    m = random.randint(0, len(s.cube["front"]))
+    n = random.randint(0, len(s.cube["front"]))
+
+    if s.cube["front"][m,n] == 0 and s.cube["back"][m,n] == 1 and s.cube["up"][m,n] == 0 and\
+            s.cube["down"][m,n] == 1 and s.cube["left"][m,n] == 0 and s.cube["right"][m,n] == 1:
+        return 1
+
+    return 0
+
+# check to see if there rightmost vertical on each face is the same
+def check_rightmost(s):
+    for key, value in s.cube.items():
+        face = s.cube[key]
+        if len(set(face[:,-1].flatten())) > 1:
+            return 0
+
+    return 1
+
+# check to see if diagonal of face are all same color
+def check_diag(s):
+    for key, value in s.cube.items():
+        face = s.cube[key]
+        if len(set(face.diagonal().flatten())) > 1:
+            return 0
+
+    return 1
+
 # Q-Learning
 
 ACTIONS = [op.name for op in OPERATORS]
@@ -338,6 +407,7 @@ class MDP_rubik:
         self.opt_policy = {}
         for state in self.all_states:
             self.opt_policy[state] = self.get_best_action(state)
+
 
 state = State()
 CREATE_INITIAL_STATE = state.shuffle_cube()
