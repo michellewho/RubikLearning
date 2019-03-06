@@ -112,12 +112,12 @@ class Operator:
 # <OPERATORS>
 
 OPERATORS = []
-OPERATORS.append(Operator("Rotate Up", lambda s: up_op(s)))
-OPERATORS.append(Operator("Rotate Down", lambda s: down_op(s)))
-OPERATORS.append(Operator("Rotate Left", lambda s: left_op(s)))
-OPERATORS.append(Operator("Rotate Right", lambda s: right_op(s)))
-OPERATORS.append(Operator("Rotate Front", lambda s: front_op(s)))
-OPERATORS.append(Operator("Rotate Back", lambda s: back_op(s)))
+OPERATORS.append(Operator("Rotate Up", lambda s: up_op(up_op(s))))
+OPERATORS.append(Operator("Rotate Down", lambda s: down_op(down_op(s))))
+OPERATORS.append(Operator("Rotate Left", lambda s: left_op(left_op(s))))
+OPERATORS.append(Operator("Rotate Right", lambda s: right_op(right_op(s))))
+OPERATORS.append(Operator("Rotate Front", lambda s: front_op(front_op(s))))
+OPERATORS.append(Operator("Rotate Back", lambda s: back_op(back_op(s))))
 
 # </OPERATORS>
 
@@ -338,14 +338,13 @@ class MDP_rubik:
             for state in L:
                 if state not in CLOSED:
                     OPEN.append(state)
-            print(len(OPEN))
+            print(len(self.all_states))
     def getPolicyDict(self):
         self.opt_policy = {}
         for state in self.all_states:
             self.opt_policy[state] = self.get_best_action(state)
 
 state = State()
-state = state.shuffle_cube()
-CREATE_INITIAL_STATE = state
+CREATE_INITIAL_STATE = state.shuffle_cube()
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
 mdp.QLearn(1, .8, .5)
