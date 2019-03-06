@@ -66,8 +66,8 @@ class State:
         return news
 
     def shuffle_cube(self):
+        s = self
         for i in range(100):
-            s = self
             s = OPERATORS[random.randint(0, 5)].apply(s)
         return s
 
@@ -112,12 +112,12 @@ class Operator:
 # <OPERATORS>
 
 OPERATORS = []
-OPERATORS.append(Operator("Rotate Up", lambda s: up(s)))
-OPERATORS.append(Operator("Rotate Down", lambda s: down(s)))
-OPERATORS.append(Operator("Rotate Left", lambda s: left(s)))
-OPERATORS.append(Operator("Rotate Right", lambda s: right(s)))
-OPERATORS.append(Operator("Rotate Front", lambda s: front(s)))
-OPERATORS.append(Operator("Rotate Back", lambda s: back(s)))
+OPERATORS.append(Operator("Rotate Up", lambda s: up_op(s)))
+OPERATORS.append(Operator("Rotate Down", lambda s: down_op(s)))
+OPERATORS.append(Operator("Rotate Left", lambda s: left_op(s)))
+OPERATORS.append(Operator("Rotate Right", lambda s: right_op(s)))
+OPERATORS.append(Operator("Rotate Front", lambda s: front_op(s)))
+OPERATORS.append(Operator("Rotate Back", lambda s: back_op(s)))
 
 # </OPERATORS>
 
@@ -131,14 +131,14 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 
 
 # OPERATORS
-def up(s):
+def up_op(s):
     ns = s.copy()
     ns.cube["up"] = np.rot90(ns.cube["up"], 3)
 
-    front = ns.cube["front"][0]
-    left = ns.cube["left"][0]
-    right = ns.cube["right"][0]
-    back = ns.cube["back"][0]
+    front = np.copy(ns.cube["front"][0])
+    left = np.copy(ns.cube["left"][0])
+    right = np.copy(ns.cube["right"][0])
+    back = np.copy(ns.cube["back"][0])
 
     ns.cube["front"][0] = right
     ns.cube["left"][0] = front
@@ -148,13 +148,14 @@ def up(s):
     return ns
 
 
-def front(s):
+def front_op(s):
     ns = s.copy()
     ns.cube["front"] = np.rot90(ns.cube["front"], 3)
-    up = ns.cube["up"][1]
-    down = ns.cube["down"][0]
-    right = ns.cube["right"][:, 0]
-    left = ns.cube["left"][:, 1]
+
+    up = np.copy(ns.cube["up"][1])
+    down = np.copy(ns.cube["down"][0])
+    right = np.copy(ns.cube["right"][:, 0])
+    left = np.copy(ns.cube["left"][:, 1])
 
     ns.cube["up"][1] = left
     ns.cube["down"][0] = right
@@ -164,13 +165,14 @@ def front(s):
     return ns
 
 
-def back(s):
+def back_op(s):
     ns = s.copy()
     ns.cube["back"] = np.rot90(ns.cube["back"], 3)
-    up = ns.cube["up"][0]
-    down = ns.cube["down"][1]
-    right = ns.cube["right"][:, 0]
-    left = ns.cube["left"][:, 1]
+
+    up = np.copy(ns.cube["up"][0])
+    down = np.copy(ns.cube["down"][1])
+    right = np.copy(ns.cube["right"][:, 0])
+    left = np.copy(ns.cube["left"][:, 1])
 
     ns.cube["up"][0] = right
     ns.cube["down"][1] = left
@@ -180,14 +182,14 @@ def back(s):
     return ns
 
 
-def down(s):
+def down_op(s):
     ns = s.copy()
     ns.cube["down"] = np.rot90(ns.cube["down"], 3)
 
-    front = ns.cube["front"][1]
-    left =  ns.cube["left"][1]
-    right =  ns.cube["right"][1]
-    back = ns.cube["back"][1]
+    front = np.copy(ns.cube["front"][1])
+    left =  np.copy(ns.cube["left"][1])
+    right =  np.copy(ns.cube["right"][1])
+    back = np.copy(ns.cube["back"][1])
 
     ns.cube["front"][1] = left
     ns.cube["left"][1] = back
@@ -196,14 +198,14 @@ def down(s):
 
     return ns
 
-def left(s):
+def left_op(s):
     ns = s.copy()
     ns.cube["left"] = np.rot90(ns.cube["left"], 3)
 
-    up = ns.cube["up"][:, 0]
-    back = ns.cube["back"][:, 1]
-    down = ns.cube["down"][:, 0]
-    front = ns.cube["front"][:, 0]
+    up = np.copy(ns.cube["up"][:, 0])
+    back = np.copy(ns.cube["back"][:, 1])
+    down = np.copy(ns.cube["down"][:, 0])
+    front = np.copy(ns.cube["front"][:, 0])
 
     ns.cube["up"][:, 1] = back
     ns.cube["back"][:, 0] = down
@@ -213,14 +215,14 @@ def left(s):
     return ns
 
 
-def right(s):
+def right_op(s):
     ns = s.copy()
     ns.cube["right"] = np.rot90(ns.cube["right"], 3)
 
-    back = ns.cube["back"][:, 0]
-    up = ns.cube["up"][:, 1]
-    front = ns.cube["front"][:, 1]
-    down = ns.cube["down"][:, 1]
+    back = np.copy(ns.cube["back"][:, 0])
+    up = np.copy(ns.cube["up"][:, 1])
+    front = np.copy(ns.cube["front"][:, 1])
+    down = np.copy(ns.cube["down"][:, 1])
 
     ns.cube["back"][:, 1] = up
     ns.cube["up"][:, 0] = front
@@ -343,7 +345,12 @@ class MDP_rubik:
             self.opt_policy[state] = self.get_best_action(state)
 
 state = State()
-state = state.shuffle_cube()
-CREATE_INITIAL_STATE = state
-mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(1, .8, .5)
+state = left_op(state)
+state = left_op(state)
+state = left_op(state)
+state = left_op(state)
+print(state.cube)
+# state = state.shuffle_cube()
+# CREATE_INITIAL_STATE = state
+# mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
+# mdp.QLearn(1, .8, .5)
