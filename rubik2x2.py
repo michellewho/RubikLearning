@@ -207,10 +207,10 @@ def left_op(s):
     down = np.copy(ns.cube["down"][:, 0])
     front = np.copy(ns.cube["front"][:, 0])
 
-    ns.cube["up"][:, 1] = back
-    ns.cube["back"][:, 0] = down
-    ns.cube["down"][:, 1] = front
-    ns.cube["front"][:, 1] = up
+    ns.cube["up"][:, 0] = back
+    ns.cube["back"][:, 1] = down
+    ns.cube["down"][:, 0] = front
+    ns.cube["front"][:, 0] = up
 
     return ns
 
@@ -224,10 +224,10 @@ def right_op(s):
     front = np.copy(ns.cube["front"][:, 1])
     down = np.copy(ns.cube["down"][:, 1])
 
-    ns.cube["back"][:, 1] = up
-    ns.cube["up"][:, 0] = front
-    ns.cube["front"][:, 0] = down
-    ns.cube["down"][:, 0] = back
+    ns.cube["back"][:, 0] = up
+    ns.cube["up"][:, 1] = front
+    ns.cube["front"][:, 1] = down
+    ns.cube["down"][:, 1] = back
 
     return ns
 
@@ -345,12 +345,7 @@ class MDP_rubik:
             self.opt_policy[state] = self.get_best_action(state)
 
 state = State()
-state = left_op(state)
-state = left_op(state)
-state = left_op(state)
-state = left_op(state)
-print(state.cube)
-# state = state.shuffle_cube()
-# CREATE_INITIAL_STATE = state
-# mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-# mdp.QLearn(1, .8, .5)
+state = state.shuffle_cube()
+CREATE_INITIAL_STATE = state
+mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
+mdp.QLearn(1, .8, .5)
