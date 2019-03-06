@@ -172,10 +172,10 @@ def back(s):
     right = ns.cube["right"][:, 0]
     left = ns.cube["left"][:, 1]
 
-    ns.cube["up"][0] = left
-    ns.cube["down"][1] = right
-    ns.cube["right"][:, 0] = up
-    ns.cube["left"][:, 1] = down
+    ns.cube["up"][0] = right
+    ns.cube["down"][1] = left
+    ns.cube["right"][:, 0] = down
+    ns.cube["left"][:, 1] = up
 
     return ns
 
@@ -189,10 +189,10 @@ def down(s):
     right =  ns.cube["right"][1]
     back = ns.cube["back"][1]
 
-    ns.cube["front"][1] = right
-    ns.cube["left"][1] = front
-    ns.cube["right"][1] = back
-    ns.cube["back"][1] = left
+    ns.cube["front"][1] = left
+    ns.cube["left"][1] = back
+    ns.cube["right"][1] = front
+    ns.cube["back"][1] = right
 
     return ns
 
@@ -200,33 +200,32 @@ def left(s):
     ns = s.copy()
     ns.cube["left"] = np.rot90(ns.cube["left"], 3)
 
-    up = ns.cube["up"][:, 1]
-    back = ns.cube["back"][:, 0]
-    down = ns.cube["down"][:, 1]
-    front = ns.cube["front"][:, 1]
+    up = ns.cube["up"][:, 0]
+    back = ns.cube["back"][:, 1]
+    down = ns.cube["down"][:, 0]
+    front = ns.cube["front"][:, 0]
 
-    ns.cube["up"][:, 1] = front
-    ns.cube["back"][:, 0] = up
-    ns.cube["down"][:, 1] = back
-    ns.cube["front"][:, 1] = down
+    ns.cube["up"][:, 1] = back
+    ns.cube["back"][:, 0] = down
+    ns.cube["down"][:, 1] = front
+    ns.cube["front"][:, 1] = up
 
     return ns
-
 
 
 def right(s):
     ns = s.copy()
     ns.cube["right"] = np.rot90(ns.cube["right"], 3)
 
-    back = ns.cube["back"][:, 1]
-    up = ns.cube["up"][:, 0]
-    front = ns.cube["front"][:, 0]
-    down = ns.cube["down"][:, 0]
+    back = ns.cube["back"][:, 0]
+    up = ns.cube["up"][:, 1]
+    front = ns.cube["front"][:, 1]
+    down = ns.cube["down"][:, 1]
 
-    ns.cube["back"][:, 1] = down
-    ns.cube["up"][:, 0] = back
-    ns.cube["front"][:, 0] = up
-    ns.cube["down"][:, 0] = front
+    ns.cube["back"][:, 1] = up
+    ns.cube["up"][:, 0] = front
+    ns.cube["front"][:, 0] = down
+    ns.cube["down"][:, 0] = back
 
     return ns
 
