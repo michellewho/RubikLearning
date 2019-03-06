@@ -120,12 +120,12 @@ except:
 # <OPERATORS>
 
 OPERATORS = []
-OPERATORS.append(Operator("Rotate Up", lambda s: up(s)))
-OPERATORS.append(Operator("Rotate Down", lambda s: down(s)))
-OPERATORS.append(Operator("Rotate Left", lambda s: left(s)))
-OPERATORS.append(Operator("Rotate Right", lambda s: right(s)))
-OPERATORS.append(Operator("Rotate Front", lambda s: front(s)))
-OPERATORS.append(Operator("Rotate Back", lambda s: back(s)))
+OPERATORS.append(Operator("Rotate Up", lambda s: up(up(s))   ))
+OPERATORS.append(Operator("Rotate Down", lambda s: down(down(s))  ))
+OPERATORS.append(Operator("Rotate Left", lambda s: left(left(s)) ))
+OPERATORS.append(Operator("Rotate Right", lambda s: right(right(s))  ))
+OPERATORS.append(Operator("Rotate Front", lambda s: front(front(s))  ))
+OPERATORS.append(Operator("Rotate Back", lambda s: back(back(s))  ))
 
 # </OPERATORS>
 
@@ -181,9 +181,9 @@ def back(s):
     left = ns.cube.left[:, 2]
 
     ns.cube.up[0] = left
-    ns.cube.down[2]= right
-    ns.cube.right[:,0] = up
-    ns.cube.left[:.2]  = down
+    ns.cube.down[2] = right
+    ns.cube.right[:, 0] = up
+    ns.cube.left[:.2] = down
 
     return ns
 
@@ -208,15 +208,15 @@ def left(s):
     ns = s.copy()
     ns.cube.left = np.rot90(ns.cube.left, 3)
 
-    up = ns.cube.up[:,2]
-    back = ns.cube.back[:,0]
-    down = ns.cube.down[:,2]
-    front = ns.cube.front[:,2]
+    up = ns.cube.up[:, 2]
+    back = ns.cube.back[:, 0]
+    down = ns.cube.down[:, 2]
+    front = ns.cube.front[:, 2]
 
     ns.cube.up[:, 2] = front
     ns.cube.back[:, 0] = up
     ns.cube.down[:, 2] = back
-    ns.cube.front[:.2] = down
+    ns.cube.front[:, 2] = down
 
     return ns
 
@@ -226,9 +226,9 @@ def right(s):
     ns = s.copy()
     ns.cube.right = np.rot90(ns.cube.right, 3)
 
-    back = ns.cube.back[:,2]
-    up = ns.cube.up[:,0]
-    front = ns.cube.front[:,0]
+    back = ns.cube.back[:, 2]
+    up = ns.cube.up[:, 0]
+    front = ns.cube.front[:, 0]
     down = ns.cube.down[:, 0]
 
     ns.cube.back[:, 2] = down

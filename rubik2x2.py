@@ -12,6 +12,7 @@ PROBLEM_DESC = \
     '''
 
 import numpy as np
+import json
 import random
 import copy
 
@@ -33,25 +34,26 @@ class State:
     def __init__(self, cube=None):
         if cube == None:
             cube = {}
-            cube.front = np.ones((2, 2)) * 0
-            cube.back = np.ones((2, 2)) * 1
-            cube.up = np.ones((2, 2)) * 2
-            cube.down = np.ones((2, 2)) * 3
-            cube.left = np.ones((2, 2)) * 4
-            cube.right = np.ones((2, 2)) * 5
+            cube["front"] = np.ones((2, 2)) * 0
+            cube["back"] = np.ones((2, 2)) * 1
+            cube["up"] = np.ones((2, 2)) * 2
+            cube["down"] = np.ones((2, 2)) * 3
+            cube["left"] = np.ones((2, 2)) * 4
+            cube["right"] = np.ones((2, 2)) * 5
         self.cube = cube
 
     def __eq__(self, s2):
-        return cmp(self.b, s2.b) == 0
+        return np.array_equal(self.cube["front"], s2.cube["front"]) and \
+               np.array_equal(self.cube["back"], s2.cube["back"]) and \
+               np.array_equal(self.cube["up"], s2.cube["up"]) and \
+               np.array_equal(self.cube["down"], s2.cube["down"]) and \
+               np.array_equal(self.cube["left"], s2.cube["left"]) and \
+               np.array_equal(self.cube["right"], s2.cube["right"])
 
     def __str__(self):
         # Produces a textual description of a state.
         # Might not be needed in normal operation with GUIs.
-
-        txt = "\n"
-        for i in range(6):
-            txt += str(ORDER[i]) + ": " + str(self.b[i]) + "\n"
-        return txt[:-2] + "]"
+        return str(self.cube)
 
     def __hash__(self):
         return (self.__str__()).__hash__()
@@ -66,7 +68,7 @@ class State:
     def shuffle_cube(self):
         for i in range(100):
             s = self
-            s = OPERATORS[random.randint(0, len(OPERATORS))].apply(s)
+            s = OPERATORS[random.randint(0, 5)].apply(s)
         return s
 
 
@@ -93,18 +95,17 @@ class Operator:
 # <INITIAL_STATE>
 # Use default, but override if new value supplied
 # by the user on the command line.
-try:
-    import sys
-
-    init_state_string = sys.argv[2]
-    print("Initial state as given on the command line: " + init_state_string)
-    init_state_list = eval(init_state_string)
-    ## TODO Make cube from passed in list
-
-except:
-    state = State()
-    state = state.shuffle_cube()
-    CREATE_INITIAL_STATE = state
+# try:
+#     import sys
+#     init_state_string = sys.argv[2]
+#     print("Initial state as given on the command line: " + init_state_string)
+#     init_state_list = eval(init_state_string)
+#     ## TODO Make cube from passed in list
+#
+# except:
+#     state = State()
+#     state = state.shuffle_cube()
+#     CREATE_INITIAL_STATE = state
 
 # </INITIAL_STATE>
 
@@ -132,82 +133,82 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 # OPERATORS
 def up(s):
     ns = s.copy()
-    ns.cube.up = np.rot90(ns.cube.up, 3)
+    ns.cube["up"] = np.rot90(ns.cube["up"], 3)
 
-    front = ns.cube.front[0]
-    left = ns.cube.left[0]
-    right = ns.cube.right[0]
-    back = ns.cube.back[0]
+    front = ns.cube["front"][0]
+    left = ns.cube["left"][0]
+    right = ns.cube["right"][0]
+    back = ns.cube["back"][0]
 
-    ns.cube.front[0] = right
-    ns.cube.left[0] = front
-    ns.cube.right[0] = back
-    ns.cube.back[0] = left
+    ns.cube["front"][0] = right
+    ns.cube["left"][0] = front
+    ns.cube["right"][0] = back
+    ns.cube["back"][0] = left
 
     return ns
 
 
 def front(s):
     ns = s.copy()
-    ns.cube.front = np.rot90(ns.cube.front, 3)
-    up = ns.cube.up[1]
-    down = ns.cube.down[0]
-    right = ns.cube.right[:, 0]
-    left = ns.cube.left[:, 1]
+    ns.cube["front"] = np.rot90(ns.cube["front"], 3)
+    up = ns.cube["up"][1]
+    down = ns.cube["down"][0]
+    right = ns.cube["right"][:, 0]
+    left = ns.cube["left"][:, 1]
 
-    ns.cube.up[1] = left
-    ns.cube.down[0] = right
-    ns.cube.right[:, 0] = up
-    ns.cube.left[:, 1] = down
+    ns.cube["up"][1] = left
+    ns.cube["down"][0] = right
+    ns.cube["right"][:, 0] = up
+    ns.cube["left"][:, 1] = down
 
     return ns
 
 
 def back(s):
     ns = s.copy()
-    ns.cube.back = np.rot90(ns.cube.back, 3)
-    up = ns.cube.up[0]
-    down = ns.cube.down[1]
-    right = ns.cube.right[:, 0]
-    left = ns.cube.left[:, 1]
+    ns.cube["back"] = np.rot90(ns.cube["back"], 3)
+    up = ns.cube["up"][0]
+    down = ns.cube["down"][1]
+    right = ns.cube["right"][:, 0]
+    left = ns.cube["left"][:, 1]
 
-    ns.cube.up[0] = left
-    ns.cube.down[1] = right
-    ns.cube.right[:,0] = up
-    ns.cube.left[:,1]  = down
+    ns.cube["up"][0] = left
+    ns.cube["down"][1] = right
+    ns.cube["right"][:, 0] = up
+    ns.cube["left"][:, 1] = down
 
     return ns
 
 
 def down(s):
     ns = s.copy()
-    ns.cube.down = np.rot90(ns.cube.down, 3)
+    ns.cube["down"] = np.rot90(ns.cube["down"], 3)
 
-    front = ns.cube.front[1]
-    left =  ns.cube.left[1]
-    right =  ns.cube.right[1]
-    back = ns.cube.back[1]
+    front = ns.cube["front"][1]
+    left =  ns.cube["left"][1]
+    right =  ns.cube["right"][1]
+    back = ns.cube["back"][1]
 
-    ns.cube.front[1] = right
-    ns.cube.left[1] = front
-    ns.cube.right[1] = back
-    ns.cube.back[1] = left
+    ns.cube["front"][1] = right
+    ns.cube["left"][1] = front
+    ns.cube["right"][1] = back
+    ns.cube["back"][1] = left
 
     return ns
 
 def left(s):
     ns = s.copy()
-    ns.cube.left = np.rot90(ns.cube.left, 3)
+    ns.cube["left"] = np.rot90(ns.cube["left"], 3)
 
-    up = ns.cube.up[:,1]
-    back = ns.cube.back[:,0]
-    down = ns.cube.down[:,1]
-    front = ns.cube.front[:,1]
+    up = ns.cube["up"][:, 1]
+    back = ns.cube["back"][:, 0]
+    down = ns.cube["down"][:, 1]
+    front = ns.cube["front"][:, 1]
 
-    ns.cube.up[:, 1] = front
-    ns.cube.back[:, 0] = up
-    ns.cube.down[:, 1] = back
-    ns.cube.front[:, 1] = down
+    ns.cube["up"][:, 1] = front
+    ns.cube["back"][:, 0] = up
+    ns.cube["down"][:, 1] = back
+    ns.cube["front"][:, 1] = down
 
     return ns
 
@@ -215,17 +216,17 @@ def left(s):
 
 def right(s):
     ns = s.copy()
-    ns.cube.right = np.rot90(ns.cube.right, 3)
+    ns.cube["right"] = np.rot90(ns.cube["right"], 3)
 
-    back = ns.cube.back[:, 1]
-    up = ns.cube.up[:, 0]
-    front = ns.cube.front[:,0]
-    down = ns.cube.down[:, 0]
+    back = ns.cube["back"][:, 1]
+    up = ns.cube["up"][:, 0]
+    front = ns.cube["front"][:, 0]
+    down = ns.cube["down"][:, 0]
 
-    ns.cube.back[:, 1] = down
-    ns.cube.up[:, 0] = back
-    ns.cube.front[:, 0] = up
-    ns.cube.down[:, 0] = front
+    ns.cube["back"][:, 1] = down
+    ns.cube["up"][:, 0] = back
+    ns.cube["front"][:, 0] = up
+    ns.cube["down"][:, 0] = front
 
     return ns
 
@@ -246,11 +247,10 @@ def R(s, a, sp):
 
 
 class MDP_rubik:
-    def __init__(self, T, R, start, goal, actions, operators):
+    def __init__(self, T, R, start, actions, operators):
         self.T = T
         self.R = R
         self.start_state = start
-        self.goal_state = goal
         self.ACTIONS = actions
         self.OPERATORS = operators
         self.state_sucessor_dict = {}
@@ -272,8 +272,10 @@ class MDP_rubik:
             self.all_states.add(ns)
             successors.append(ns)
         self.state_sucessor_dict[state] = successors
+        return successors
 
     def init_q_learn(self):
+        self.generate_all_states()
         self.QValues = {}
         self.visit_count = {}
         for s in self.all_states:
@@ -302,7 +304,15 @@ class MDP_rubik:
     def calculate_Q(self,s ,a ,discount, learning_bias):
         curr_q = self.QValues[(s, a)]
         learning_rate = self.calculate_learning_rate(s, a)
-        #TODO: Learn how to do this stuff
+        sp = self.take_action(s)
+        if self.T(s, a, sp) == 0:
+            self.curr_state = s
+            return curr_q
+        best_action = self.get_best_action(s)
+        new_val = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)]
+        biased_val = (1 - learning_rate) * curr_q + learning_rate * new_val
+        return biased_val
+
 
     def QLearn(self, iterations, discount, learning_bias):
         self.init_q_learn()
@@ -327,3 +337,14 @@ class MDP_rubik:
             for state in L:
                 if state not in CLOSED:
                     OPEN.append(state)
+            print(len(OPEN))
+    def getPolicyDict(self):
+        self.opt_policy = {}
+        for state in self.all_states:
+            self.opt_policy[state] = self.get_best_action(state)
+
+state = State()
+state = state.shuffle_cube()
+CREATE_INITIAL_STATE = state
+mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
+mdp.QLearn(1, .8, .5)
