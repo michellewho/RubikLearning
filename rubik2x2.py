@@ -303,7 +303,39 @@ def check_diag(s):
 
     return 1
 
+def check_adjacent(cube):
+    n = len(cube)
+    val = 0
+    for i in range(n):
+        for j in range(n):
+            # u, ur, r, dr
+            if i - 1 in range(n):
+                val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
+            if i - 1 in range(n) and j + 1 in range(n):
+                val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
+            if j + 1 in range(n):
+                val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
+            if i + 1 in range(n) and j + 1 in range(n):
+                val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
+    return val
 
+
+
+# check number of adjacent pairs of same color
+def num_adj_front(s):
+    return check_adjacent(s.cube["front"])
+def num_adj_back(s):
+    return check_adjacent(s.cube["back"])
+def num_adj_left(s):
+    return check_adjacent(s.cube["left"])
+def num_adj__right(s):
+    return check_adjacent(s.cube["right"])
+def num_adj__up(s):
+    return check_adjacent(s.cube["up"])
+def num_adj__down(s):
+    return check_adjacent(s.cube["down"])
+
+# check number of unique colors
 def unique_num_front(s):
     return len(set(s.cube["front"].flatten()))
 def unique_num_back(s):
