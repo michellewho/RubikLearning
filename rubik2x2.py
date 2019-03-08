@@ -320,6 +320,20 @@ def check_adjacent(cube):
     return val
 
 
+# check number of same colors in corners
+def unique_corners_front(s):
+    return len(set(s.cube["front"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+def unique_corners_back(s):
+    return len(set(s.cube["back"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+def unique_corners_left(s):
+    return len(set(s.cube["left"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+def unique_corners_right(s):
+    return len(set(s.cube["right"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+def unique_corners_up(s):
+    return len(set(s.cube["up"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+def unique_corners_down(s):
+    return len(set(s.cube["down"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+
 
 # check number of adjacent pairs of same color
 def num_adj_front(s):
