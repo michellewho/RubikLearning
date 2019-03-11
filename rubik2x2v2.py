@@ -15,6 +15,77 @@ import numpy as np
 import json
 import random
 import copy
+import math
+from queue import PriorityQueue
+from itertools import count
+
+
+class My_Priority_Queue:
+    def __init__(self):
+        self.q = []  # Actual data goes in a list.
+
+    def __contains__(self, elt):
+        '''If there is a (state, priority) pair on the list
+        where state==elt, then return True.'''
+        # print("In My_Priority_Queue.__contains__: elt= ", str(elt))
+        for pair in self.q:
+            if pair[0] == elt: return True
+        return False
+
+    def delete_max(self):
+        ''' Standard priority-queue dequeuing method.'''
+        if self.q == []: return []  # Simpler than raising an exception.
+        temp_min_pair = self.q[0]
+        temp_min_value = temp_min_pair[1]
+        temp_min_position = 0
+        for j in range(1, len(self.q)):
+            if self.q[j][1] > temp_min_value:
+                temp_min_pair = self.q[j]
+                temp_min_value = temp_min_pair[1]
+                temp_min_position = j
+        del self.q[temp_min_position]
+        return temp_min_pair
+
+    def insert(self, state, priority):
+        '''We do not keep the list sorted, in this implementation.'''
+        # print("calling insert with state, priority: ", state, priority)
+
+        if self[state] != -1:
+            print("Error: You're trying to insert an element into a My_Priority_Queue instance,")
+            print(" but there is already such an element in the queue.")
+            return
+        self.q.append((state, priority))
+
+    def __len__(self):
+        '''We define length of the priority queue to be the
+        length of its list.'''
+        return len(self.q)
+
+    def __getitem__(self, state):
+        '''This method enables Pythons right-bracket syntax.
+        Here, something like  priority_val = my_queue[state]
+        becomes possible. Note that the syntax is actually used
+        in the insert method above:  self[state] != -1  '''
+        for (S, P) in self.q:
+            if S == state: return P
+        return -1  # This value means not found.
+
+    def __delitem__(self, state):
+        '''This method enables Python's del operator to delete
+        items from the queue.'''
+        # print("In MyPriorityQueue.__delitem__: state is: ", str(state))
+        for count, (S, P) in enumerate(self.q):
+            if S == state:
+                del self.q[count]
+                return
+
+    def __str__(self):
+        txt = "My_Priority_Queue: ["
+        for (s, p) in self.q: txt += '(' + str(s) + ',' + str(p) + ') '
+        txt += ']'
+        return txt
+
+
 
 # </METADATA>
 
@@ -43,18 +114,20 @@ class State:
         self.cube = cube
 
     def __eq__(self, s2):
-        return
+        return np.array_equal(self.cube["front"], s2.cube["front"]) and np.array_equal(self.cube["back"], s2.cube["back"]) and \
+               np.array_equal(self.cube["left"], s2.cube["left"]) and np.array_equal(self.cube["right"], s2.cube["right"]) and \
+               np.array_equal(self.cube["up"], s2.cube["up"]) and np.array_equal(self.cube["down"], s2.cube["down"])
     def __str__(self):
         # Produces a textual description of a state.
         # Might not be needed in normal operation with GUIs.
-        txt = ""
-        txt += str(unique_num_front(self))
-        txt += str(unique_num_back(self))
-        txt += str(unique_num_left(self))
-        txt += str(unique_num_right(self))
-        txt += str(unique_num_up(self))
-        txt += str(unique_num_down(self))
-        return str(unique_list(self))
+        txt = "\n"
+        txt += str(self.cube["front"])
+        txt += str(self.cube["back"])
+        txt += str(self.cube["left"])
+        txt += str(self.cube["right"])
+        txt += str(self.cube["up"])
+        txt += str(self.cube["down"])
+        return txt
 
     def __hash__(self):
         return (self.__str__()).__hash__()
@@ -69,14 +142,18 @@ class State:
     def shuffle_cube(self, n):
         s = self
         for i in range(n):
-            s = OPERATORS[random.randint(0, 5)].apply(s)
+            op = OPERATORS[random.randint(0, 5)]
+            s = op.apply(s)
         return s
 
 
 def goal_test(s):
-    return all(x == 1 for x in unique_list(s))
+    return len(set(s.cube["front"].flatten())) == 1 and len(set(s.cube["back"].flatten())) == 1 and \
+           len(set(s.cube["left"].flatten())) == 1 and len(set(s.cube["right"].flatten())) == 1 and \
+           len(set(s.cube["up"].flatten())) == 1 and len(set(s.cube["down"].flatten())) == 1
 def goal_message(s):
     return "You Solved the Puzzle!"
+
 
 class Operator:
     def __init__(self, name, state_transf):
@@ -109,12 +186,12 @@ class Operator:
 # <OPERATORS>
 
 OPERATORS = []
-OPERATORS.append(Operator("Rotate Up", lambda s: (up_op(s))))
-OPERATORS.append(Operator("Rotate Down", lambda s: (down_op(s))))
-OPERATORS.append(Operator("Rotate Left", lambda s: (left_op(s))))
-OPERATORS.append(Operator("Rotate Right", lambda s: (right_op(s))))
-OPERATORS.append(Operator("Rotate Front", lambda s: (front_op(s))))
-OPERATORS.append(Operator("Rotate Back", lambda s: (back_op(s))))
+OPERATORS.append(Operator("Rotate Up", lambda s: up_op(up_op(s))))
+OPERATORS.append(Operator("Rotate Down", lambda s: down_op(down_op(s))))
+OPERATORS.append(Operator("Rotate Left", lambda s: left_op(left_op(s))))
+OPERATORS.append(Operator("Rotate Right", lambda s: right_op(right_op(s))))
+OPERATORS.append(Operator("Rotate Front", lambda s: front_op(front_op(s))))
+OPERATORS.append(Operator("Rotate Back", lambda s: back_op(back_op(s))))
 
 # </OPERATORS>
 
@@ -305,12 +382,12 @@ def check_adjacent(cube):
             # u, ur, r, dr
             if i - 1 in range(n):
                 val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
-            if i - 1 in range(n) and j + 1 in range(n):
-                val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
+            # if i - 1 in range(n) and j + 1 in range(n):
+            #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
             if j + 1 in range(n):
                 val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
-            if i + 1 in range(n) and j + 1 in range(n):
-                val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
+            # if i + 1 in range(n) and j + 1 in range(n):
+            #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
     return val
 
 
@@ -373,11 +450,12 @@ ACTIONS = [op.name for op in OPERATORS]
 
 # Transition Function, probability of all moves is 1
 def T(s, a, sp):
-    return 1
+    if goal_test(s): return 0
+    else: return 1
 
 # reward function
 def R(s, a, sp):
-    if goal_test(sp):
+    if goal_test(s):
         return 10000
     else:
         return -1
@@ -407,9 +485,9 @@ class MDP_rubik:
         successors = []
         for operator in self.OPERATORS:
             ns = operator.apply(s)
-            self.all_states.add(ns)
             successors.append(ns)
         self.state_sucessor_dict[s] = successors
+        self.all_states.update(successors)
         return successors
 
     def init_q_learn(self):
@@ -418,12 +496,14 @@ class MDP_rubik:
             for a in self.ACTIONS:
                 self.QValues[(s, a)] = 0
                 self.visit_count[(s, a)] = 0
+        # print(self.QValues)
 
-    def get_best_action(self,s):
+    def get_best_action(self, s):
         best_action = ""
         max_value = float("-inf")
         for a in self.ACTIONS:
-            if self.QValues[(s,a)] > max_value:
+            # if (s, a) in self.QValues:
+            if self.QValues[(s, a)] > max_value:
                 best_action = a
                 max_value = self.QValues[(s, a)]
         return best_action
@@ -438,14 +518,19 @@ class MDP_rubik:
 
 
     def calculate_Q(self,s ,a ,discount, learning_bias):
-        curr_q = self.QValues[(s, a)]
+        best_action = self.get_best_action(s)
+        curr_q = self.QValues[(s, best_action)]
         learning_rate = self.calculate_learning_rate(s, a)
         sp = self.take_action(a)
-        if self.T(s, a, sp) == 0:
-            self.curr_state = s
-            return curr_q
-        best_action = self.get_best_action(s)
+        if sp not in self.all_states:
+            return -10
+        self.curr_state = sp
+        if goal_test(sp):
+            return 1000
+        best_action = self.get_best_action(sp)
+        # print(sp, best_action)
         new_val = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)]
+
         biased_val = (1 - learning_rate) * curr_q + learning_rate * new_val
         return biased_val
 
@@ -453,41 +538,87 @@ class MDP_rubik:
     def QLearn(self, iterations, discount, learning_bias):
         self.init_q_learn()
         for i in range(iterations):
+            print(i)
+            count = 0
             self.curr_state = self.start_state
-            while not goal_test(self.curr_state):
+            while not goal_test(self.curr_state) and count < 100:
+                # print("working")
                 s = self.curr_state
                 a = self.choose_action(s, learning_bias)
                 self.visit_count[(s, a)] += 1
                 self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias)
+                count += 1
+            if goal_test(self.curr_state):
+                print("QLearn got to goal state")
+
+    def h(self, s):
+        if goal_test(s):
+            # print("we have seen a goal state")
+            return 10000000
+        total = 0
+        for side in adj_list(s):
+            total += math.pow(10, side)
+        return total
 
 
     def generate_all_states(self):
-        OPEN = [self.start_state]
+        TOTAL_COST = 0
+        COUNT = 0
+        MAX_OPEN_LENGTH = 0
+        BACKLINKS = {}
+        g = {}
+        f = {}
+        initial_state = self.start_state
         CLOSED = []
-        print("generating states")
-        while OPEN != []:
-            S = OPEN[0]
-            if goal_test(S):
-                print("found a goal state")
-            del OPEN[0]
+        BACKLINKS[initial_state] = None
+
+        OPEN = My_Priority_Queue()
+
+        g[initial_state] = 0.0
+        f[initial_state] = g[initial_state] + self.h(initial_state)
+        OPEN.insert(initial_state, f[initial_state])
+
+        while len(OPEN) > 0:
+            # print(OPEN)
+            (S, P) = OPEN.delete_max()
+            # print(self.h(S))
+            # print("S:")
+            # print(S)
+            self.all_states.add(S)
             CLOSED.append(S)
-            L = self.generate_succesors(S)
-            for s in L:
-                # print(str(s))
-                if s not in CLOSED:
-                    OPEN.append(s)
-        print(len(self.all_states))
+            neighbors = self.generate_succesors(S)
+            if goal_test(S):
+                print("found goal state")
+                self.all_states.add(S)
+                print(len(self.all_states))
+                return
+            COUNT += 1
+            new_g = g[S] + 1
+            for succ in neighbors:
+                if succ not in CLOSED and succ not in OPEN:
+                    OPEN.insert(succ, new_g + self.h(succ))
+                g[succ] = new_g
+            self.all_states.add(S)
+        return None  # No more states on OPEN, and no goal reached.
 
     def getPolicyDict(self):
         self.opt_policy = {}
         for state in self.all_states:
             self.opt_policy[state] = self.get_best_action(state)
+        return self.opt_policy
 
 
 state = State()
-# print(str(state))
-# ns = state.copy()
-CREATE_INITIAL_STATE = state.shuffle_cube(1)
+CREATE_INITIAL_STATE = state.shuffle_cube(15)
 print(str(CREATE_INITIAL_STATE))
+
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(1, .8, .5)
+mdp.QLearn(100, .8, .2)
+policy_dict = mdp.getPolicyDict()
+
+curr_state = CREATE_INITIAL_STATE
+while not goal_test(curr_state):
+    print(policy_dict[curr_state])
+    for operator in OPERATORS:
+        if operator.name == policy_dict[curr_state]:
+            curr_state = operator.apply(curr_state)
