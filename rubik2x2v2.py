@@ -391,6 +391,22 @@ def check_adjacent(cube):
     return val
 
 
+# returns number of squares on correct face of cube
+def f1(s):
+    return len(sum(s.cube["front"] == 0)) + len(sum(s.cube["back"] == 1)) + len(sum(s.cube["up"] == 2)) + \
+           len(sum(s.cube["down"] == 3) + len(sum(s.cube["left"] == 4)) + len(sum(s.cube["right"] == 5)))
+
+# returns number of faces that all have same color
+def f2(s):
+    count = 0
+    count += 1 if len(set(s.cube["front"].flatten())) == 1 else 0
+    count += 1 if len(set(s.cube["back"].flatten())) == 1 else 0
+    count += 1 if len(set(s.cube["left"].flatten())) == 1 else 0
+    count += 1 if len(set(s.cube["right"].flatten())) == 1 else 0
+    count += 1 if len(set(s.cube["up"].flatten())) == 1 else 0
+    count += 1 if len(set(s.cube["down"].flatten())) == 1 else 0
+
+    return count
 
 # check number of adjacent pairs of same color
 def num_adj_front(s):
@@ -546,7 +562,9 @@ class MDP_rubik:
                 s = self.curr_state
                 a = self.choose_action(s, learning_bias)
                 self.visit_count[(s, a)] += 1
+                # self.QValues[feature_comp(s)] = f1(s) + f2(s)
                 self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias)
+
                 count += 1
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
