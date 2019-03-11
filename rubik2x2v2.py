@@ -485,7 +485,7 @@ class MDP_rubik:
         self.weights = [0, 0]
 
     def get_best_action(self, s):
-        best_action = ""
+        best_action = None
         max_value = float("-inf")
         for a in self.ACTIONS:
             if (s, a) in self.QValues:
@@ -495,9 +495,12 @@ class MDP_rubik:
         return best_action
 
     def choose_action(self, s, learning_bias):
-        if random.random() < learning_bias:
-            return self.ACTIONS[random.randint(0, 5)]
-        return self.get_best_action(s)
+        best_action = None
+        if random.random() > learning_bias:
+            best_action = self.get_best_action(s)
+        if best_action is None:
+            best_action = random.choice(ACTIONS)
+        return best_action
 
     def calculate_learning_rate(self, s, a):
         return 1 / self.visit_count[(s, a)]
@@ -521,14 +524,13 @@ class MDP_rubik:
 
 
     def calculate_Q(self,s ,a ,discount, w0):
-
         learning_rate = self.calculate_learning_rate(s, a)
         sp = self.take_action(a)
         best_action = self.get_best_action(sp)
         self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
         new_q = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
 
-        delta = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)] - self.QValues[(s, a)]
+        delta = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)] - new_q
 
         self.update_weights(s, learning_rate, delta, w0)
 
@@ -544,6 +546,7 @@ class MDP_rubik:
 
 
     def QLearn(self, iterations, discount, learning_bias):
+        total_goal = 0
         for i in range(iterations):
             print(i)
             count = 0
@@ -554,10 +557,11 @@ class MDP_rubik:
                 a = self.choose_action(s, learning_bias)
                 self.visit_count[(s, a)] = self.visit_count[(s, a)] + 1 if (s, a) in self.visit_count else 1
                 self.QValues[(s, a)] = self.calculate_Q(s, a, discount, 1)
-
                 count += 1
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
+                total_goal +=1
+        print("found goal state n times:", total_goal)
 
 
     def getPolicyDict(self):
@@ -570,8 +574,9 @@ state = State()
 CREATE_INITIAL_STATE = state.shuffle_cube(15)
 print(str(CREATE_INITIAL_STATE))
 
+print(ACTIONS)
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(50, .8, .2)
+mdp.QLearn(25, .8, .2)
 policy_dict = mdp.getPolicyDict()
 
 # curr_state = CREATE_INITIAL_STATE
