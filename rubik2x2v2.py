@@ -391,23 +391,6 @@ def check_adjacent(cube):
     return val
 
 
-# returns number of squares on correct face of cube
-def f1(s):
-    return len(sum(s.cube["front"] == 0)) + len(sum(s.cube["back"] == 1)) + len(sum(s.cube["up"] == 2)) + \
-           len(sum(s.cube["down"] == 3) + len(sum(s.cube["left"] == 4)) + len(sum(s.cube["right"] == 5)))
-
-# returns number of faces that all have same color
-def f2(s):
-    count = 0
-    count += 1 if len(set(s.cube["front"].flatten())) == 1 else 0
-    count += 1 if len(set(s.cube["back"].flatten())) == 1 else 0
-    count += 1 if len(set(s.cube["left"].flatten())) == 1 else 0
-    count += 1 if len(set(s.cube["right"].flatten())) == 1 else 0
-    count += 1 if len(set(s.cube["up"].flatten())) == 1 else 0
-    count += 1 if len(set(s.cube["down"].flatten())) == 1 else 0
-
-    return count
-
 # check number of adjacent pairs of same color
 def num_adj_front(s):
     return check_adjacent(s.cube["front"])
@@ -506,6 +489,10 @@ class MDP_rubik:
         self.all_states.update(successors)
         return successors
 
+
+    def get_weights(self):
+        self.weights = [0, 0]
+
     def init_q_learn(self):
         self.generate_all_states()
         for s in self.all_states:
@@ -532,8 +519,25 @@ class MDP_rubik:
     def calculate_learning_rate(self, s, a):
         return 1 / self.visit_count[(s, a)]
 
+    # returns number of squares on correct face of cube
+    def f1(self, s):
+        return len(sum(s.cube["front"] == 0)) + len(sum(s.cube["back"] == 1)) + len(sum(s.cube["up"] == 2)) + \
+               len(sum(s.cube["down"] == 3) + len(sum(s.cube["left"] == 4)) + len(sum(s.cube["right"] == 5)))
 
-    def calculate_Q(self,s ,a ,discount, learning_bias):
+    # returns number of faces that all have same color
+    def f2(self, s):
+        count = 0
+        count += 1 if len(set(s.cube["front"].flatten())) == 1 else 0
+        count += 1 if len(set(s.cube["back"].flatten())) == 1 else 0
+        count += 1 if len(set(s.cube["left"].flatten())) == 1 else 0
+        count += 1 if len(set(s.cube["right"].flatten())) == 1 else 0
+        count += 1 if len(set(s.cube["up"].flatten())) == 1 else 0
+        count += 1 if len(set(s.cube["down"].flatten())) == 1 else 0
+
+        return count
+
+
+    def calculate_Q(self,s ,a ,discount, learning_bias, w0):
         best_action = self.get_best_action(s)
         curr_q = self.QValues[(s, best_action)]
         learning_rate = self.calculate_learning_rate(s, a)
@@ -545,10 +549,29 @@ class MDP_rubik:
             return 1000
         best_action = self.get_best_action(sp)
         # print(sp, best_action)
+
+
+        self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
+        self.QValues[(s, a)] = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
+
+        delta = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)] - self.QValues[(s, a)]
+
+        # total = sum(self.weights())
+        # w0 = (1.0 * w0)/sum(self.weights)
+        self.update_weights(s, learning_rate, delta, w0)
+
+
         new_val = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)]
 
         biased_val = (1 - learning_rate) * curr_q + learning_rate * new_val
         return biased_val
+
+    def update_weights(self, s, learning_rate, delta, w0):
+        self.weights[0] = self.weights[0] + learning_rate * delta * self.f1(s)
+        self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
+
+        # total = sum(self.weights())
+        # self.weights = [(w * 1.0)/total for w in self.weights]
 
 
     def QLearn(self, iterations, discount, learning_bias):
@@ -557,13 +580,14 @@ class MDP_rubik:
             print(i)
             count = 0
             self.curr_state = self.start_state
+
+            self.get_weights()
             while not goal_test(self.curr_state) and count < 100:
                 # print("working")
                 s = self.curr_state
                 a = self.choose_action(s, learning_bias)
                 self.visit_count[(s, a)] += 1
-                # self.QValues[feature_comp(s)] = f1(s) + f2(s)
-                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias)
+                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias, 1)
 
                 count += 1
             if goal_test(self.curr_state):
