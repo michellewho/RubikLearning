@@ -467,48 +467,31 @@ class MDP_rubik:
         self.start_state = start
         self.ACTIONS = actions
         self.OPERATORS = operators
-        self.state_sucessor_dict = {}
-        self.all_states = set()
         self.curr_state = start
         self.QValues = {}
         self.visit_count = {}
+        self.weights = []
+        self.all_states = set()
+        self.opt_policy = {}
 
     def take_action(self, a):
-        for operator in self.OPERATORS:
-            if operator.name == a:
-                return operator.apply(self.curr_state)
-
-    def generate_succesors(self, s):
-        if s in self.state_sucessor_dict:
-            return self.state_sucessor_dict[s]
-        successors = []
-        for operator in self.OPERATORS:
-            ns = operator.apply(s)
-            successors.append(ns)
-        self.state_sucessor_dict[s] = successors
-        self.all_states.update(successors)
-        return successors
-
+        for op in self.OPERATORS:
+            if op.name == a:
+                ns = op.apply(self.curr_state)
+                self.all_states.add(ns)
+                return ns
 
     def get_weights(self):
         self.weights = [0, 0]
-
-    def init_q_learn(self):
-        self.generate_all_states()
-        for s in self.all_states:
-            for a in self.ACTIONS:
-                self.QValues[(s, a)] = 0
-                self.visit_count[(s, a)] = 0
-        # print(self.QValues)
 
     def get_best_action(self, s):
         best_action = ""
         max_value = float("-inf")
         for a in self.ACTIONS:
-            # if (s, a) in self.QValues:
-            if self.QValues[(s, a)] > max_value:
-                best_action = a
-                max_value = self.QValues[(s, a)]
+            if (s, a) in self.QValues:
+                if self.QValues[(s, a)] > max_value:
+                    best_action = a
+                    max_value = self.QValues[(s, a)]
         return best_action
 
     def choose_action(self, s, learning_bias):
@@ -537,116 +520,49 @@ class MDP_rubik:
         return count
 
 
-    def calculate_Q(self,s ,a ,discount, learning_bias, w0):
-        best_action = self.get_best_action(s)
-        curr_q = self.QValues[(s, best_action)]
+    def calculate_Q(self,s ,a ,discount, w0):
+
         learning_rate = self.calculate_learning_rate(s, a)
         sp = self.take_action(a)
-        if sp not in self.all_states:
-            return -10
-        self.curr_state = sp
-        if goal_test(sp):
-            return 1000
         best_action = self.get_best_action(sp)
-        # print(sp, best_action)
-
-
         self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
-        self.QValues[(s, a)] = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
+        new_q = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
 
         delta = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)] - self.QValues[(s, a)]
 
-        # total = sum(self.weights())
-        # w0 = (1.0 * w0)/sum(self.weights)
         self.update_weights(s, learning_rate, delta, w0)
 
-
-        new_val = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)]
-
-        biased_val = (1 - learning_rate) * curr_q + learning_rate * new_val
-        return biased_val
+        return new_q
 
     def update_weights(self, s, learning_rate, delta, w0):
         self.weights[0] = self.weights[0] + learning_rate * delta * self.f1(s)
         self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
 
+        # do we need to normalize?
         # total = sum(self.weights())
         # self.weights = [(w * 1.0)/total for w in self.weights]
 
 
     def QLearn(self, iterations, discount, learning_bias):
-        self.init_q_learn()
         for i in range(iterations):
             print(i)
             count = 0
             self.curr_state = self.start_state
-
             self.get_weights()
-            while not goal_test(self.curr_state) and count < 100:
-                # print("working")
+            while not goal_test(self.curr_state) and count < 50:
                 s = self.curr_state
                 a = self.choose_action(s, learning_bias)
-                self.visit_count[(s, a)] += 1
-                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, learning_bias, 1)
+                self.visit_count[(s, a)] = self.visit_count[(s, a)] + 1 if (s, a) in self.visit_count else 1
+                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, 1)
 
                 count += 1
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
 
-    def h(self, s):
-        if goal_test(s):
-            # print("we have seen a goal state")
-            return 10000000
-        total = 0
-        for side in adj_list(s):
-            total += math.pow(10, side)
-        return total
-
-
-    def generate_all_states(self):
-        TOTAL_COST = 0
-        COUNT = 0
-        MAX_OPEN_LENGTH = 0
-        BACKLINKS = {}
-        g = {}
-        f = {}
-        initial_state = self.start_state
-        CLOSED = []
-        BACKLINKS[initial_state] = None
-
-        OPEN = My_Priority_Queue()
-
-        g[initial_state] = 0.0
-        f[initial_state] = g[initial_state] + self.h(initial_state)
-        OPEN.insert(initial_state, f[initial_state])
-
-        while len(OPEN) > 0:
-            # print(OPEN)
-            (S, P) = OPEN.delete_max()
-            # print(self.h(S))
-            # print("S:")
-            # print(S)
-            self.all_states.add(S)
-            CLOSED.append(S)
-            neighbors = self.generate_succesors(S)
-            if goal_test(S):
-                print("found goal state")
-                self.all_states.add(S)
-                print(len(self.all_states))
-                return
-            COUNT += 1
-            new_g = g[S] + 1
-            for succ in neighbors:
-                if succ not in CLOSED and succ not in OPEN:
-                    OPEN.insert(succ, new_g + self.h(succ))
-                g[succ] = new_g
-            self.all_states.add(S)
-        return None  # No more states on OPEN, and no goal reached.
 
     def getPolicyDict(self):
-        self.opt_policy = {}
-        for state in self.all_states:
-            self.opt_policy[state] = self.get_best_action(state)
+        for s in self.all_states:
+            self.opt_policy[s] = self.get_best_action(s)
         return self.opt_policy
 
 
@@ -655,12 +571,12 @@ CREATE_INITIAL_STATE = state.shuffle_cube(15)
 print(str(CREATE_INITIAL_STATE))
 
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(100, .8, .2)
+mdp.QLearn(50, .8, .2)
 policy_dict = mdp.getPolicyDict()
 
-curr_state = CREATE_INITIAL_STATE
-while not goal_test(curr_state):
-    print(policy_dict[curr_state])
-    for operator in OPERATORS:
-        if operator.name == policy_dict[curr_state]:
-            curr_state = operator.apply(curr_state)
+# curr_state = CREATE_INITIAL_STATE
+# while not goal_test(curr_state):
+#     print(policy_dict[curr_state])
+#     for operator in OPERATORS:
+#         if operator.name == policy_dict[curr_state]:
+#             curr_state = operator.apply(curr_state)
