@@ -217,23 +217,6 @@ def right_op(s):
 
     return ns
 
-# # Features
-# check number of unique colors
-def unique_num_front(s):
-    return len(set(s.cube["front"].flatten()))
-def unique_num_back(s):
-    return len(set(s.cube["back"].flatten()))
-def unique_num_left(s):
-    return len(set(s.cube["left"].flatten()))
-def unique_num_right(s):
-    return len(set(s.cube["right"].flatten()))
-def unique_num_up(s):
-    return len(set(s.cube["up"].flatten()))
-def unique_num_down(s):
-    return len(set(s.cube["down"].flatten()))
-
-def unique_list(s):
-    return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
 # Q-Learning
 class MDP_rubik:
     def __init__(self, T, R, start, actions, operators):
@@ -249,6 +232,7 @@ class MDP_rubik:
         self.all_states = set()
         self.opt_policy = {}
 
+    # returns the new state after applying a specified action
     def take_action(self, a):
         for op in self.OPERATORS:
             if op.name == a:
@@ -256,9 +240,11 @@ class MDP_rubik:
                 self.all_states.add(ns)
                 return ns
 
+    # sets weights for SARSA algorithm
     def get_weights(self):
         self.weights = [0, 0]
 
+    # finds the best action for a specified state
     def get_best_action(self, s):
         best_action = None
         max_value = float("-inf")
@@ -269,6 +255,7 @@ class MDP_rubik:
                     max_value = self.QValues[(s, a)]
         return best_action
 
+    # given a learning bias and state, chooses the next action to take from a specific state
     def choose_action(self, s, learning_bias):
         best_action = None
         if random.random() > self.calculate_learning_rate(s, learning_bias):
@@ -277,11 +264,13 @@ class MDP_rubik:
             best_action = random.choice(ACTIONS)
         return best_action
 
+    # returns learning rate
     def calculate_learning_rate(self, s, learning_bias):
         if s in self.visit_count:
             return 1 / self.visit_count[s]
         return learning_bias
 
+    # feature 1
     def f1(self, s):
         total = 0
         score_list = np.array([self.check_adjacent(s.cube["front"]), self.check_adjacent(s.cube["back"]),
@@ -291,6 +280,7 @@ class MDP_rubik:
             total += math.pow(10, side)
         return total
 
+    # checks for adjacent squares within each face of rubik's cube
     def check_adjacent(self, cube):
         n = len(cube)
         val = 0
@@ -314,6 +304,7 @@ class MDP_rubik:
 
         return count
 
+    # calculates q score based on SARSA algorithm
     def calculate_Q(self,s ,a ,discount, w0, learning_bias):
         learning_rate = self.calculate_learning_rate(s, learning_bias)
         sp = self.take_action(a)
@@ -330,14 +321,17 @@ class MDP_rubik:
 
         return new_q
 
+    # updates weights after calculating q score on SARSA
     def update_weights(self, s, learning_rate, delta, w0):
         self.weights[0] = self.weights[0] + learning_rate * delta * self.f1(s)
         self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
 
 
         total = sum(self.weights)
-        self.weights = [(w * 1.0)/total for w in self.weights]
+        if total != 0:
+            self.weights = [(w * 1.0)/total for w in self.weights]
 
+    # applies q learning
     def QLearn(self, iterations, discount, learning_bias):
         total_goal = 0
         for i in range(iterations):
@@ -359,16 +353,17 @@ class MDP_rubik:
 
         print("found goal state n times:", total_goal)
 
-
+    # defines policy
     def getPolicyDict(self):
         for s in self.all_states:
             self.opt_policy[s] = self.get_best_action(s)
         return self.opt_policy
 
 
+# actions
 ACTIONS = [op.name for op in OPERATORS]
 
-# Transition Function, probability of all moves is 1
+# transition Function, probability of all moves is 1
 def T(s, a, sp):
     return 1
 
@@ -378,6 +373,10 @@ def R(s, a, sp):
         return 10000
     else:
         return -1
+
+
+
+
 
 
 state = State()
