@@ -20,73 +20,6 @@ from queue import PriorityQueue
 from itertools import count
 
 
-class My_Priority_Queue:
-    def __init__(self):
-        self.q = []  # Actual data goes in a list.
-
-    def __contains__(self, elt):
-        '''If there is a (state, priority) pair on the list
-        where state==elt, then return True.'''
-        # print("In My_Priority_Queue.__contains__: elt= ", str(elt))
-        for pair in self.q:
-            if pair[0] == elt: return True
-        return False
-
-    def delete_max(self):
-        ''' Standard priority-queue dequeuing method.'''
-        if self.q == []: return []  # Simpler than raising an exception.
-        temp_min_pair = self.q[0]
-        temp_min_value = temp_min_pair[1]
-        temp_min_position = 0
-        for j in range(1, len(self.q)):
-            if self.q[j][1] > temp_min_value:
-                temp_min_pair = self.q[j]
-                temp_min_value = temp_min_pair[1]
-                temp_min_position = j
-        del self.q[temp_min_position]
-        return temp_min_pair
-
-    def insert(self, state, priority):
-        '''We do not keep the list sorted, in this implementation.'''
-        # print("calling insert with state, priority: ", state, priority)
-
-        if self[state] != -1:
-            print("Error: You're trying to insert an element into a My_Priority_Queue instance,")
-            print(" but there is already such an element in the queue.")
-            return
-        self.q.append((state, priority))
-
-    def __len__(self):
-        '''We define length of the priority queue to be the
-        length of its list.'''
-        return len(self.q)
-
-    def __getitem__(self, state):
-        '''This method enables Pythons right-bracket syntax.
-        Here, something like  priority_val = my_queue[state]
-        becomes possible. Note that the syntax is actually used
-        in the insert method above:  self[state] != -1  '''
-        for (S, P) in self.q:
-            if S == state: return P
-        return -1  # This value means not found.
-
-    def __delitem__(self, state):
-        '''This method enables Python's del operator to delete
-        items from the queue.'''
-        # print("In MyPriorityQueue.__delitem__: state is: ", str(state))
-        for count, (S, P) in enumerate(self.q):
-            if S == state:
-                del self.q[count]
-                return
-
-    def __str__(self):
-        txt = "My_Priority_Queue: ["
-        for (s, p) in self.q: txt += '(' + str(s) + ',' + str(p) + ') '
-        txt += ']'
-        return txt
-
-
-
 # </METADATA>
 
 # <COMMON_DATA>
@@ -305,161 +238,145 @@ def right_op(s):
 
     return ns
 
-# Features
-# check corners
-def corners(s):
-    for key, value in s.cube.items():
-        face = s.cube[key]
-        if len(set(face[::face.shape[0] - 1, ::face.shape[1] - 1].flatten())) > 1:
-            return 0
-    return 1
-
-# check middle horizontal layer -- not plausible for 2x2?
-def horiz_middle(s):
-    for key, value in s.cube.items():
-        face = s.cube[key]
-        if len(set(face[1].flatten())) > 1:
-            return 0
-    return 1
-
-# check middle vertical layer -- also not plausible for 2x2?
-def vert_middle(s):
-    for key, value in s.cube.items():
-        face = s.cube[key]
-        if len(set(face[:,1].flatten())) > 1:
-            return 0
-    return 1
-
-# check to see if random tile matches middle tile -- also not plausible for 2x2?
-def random_square_match(s):
-    for key, value in s.cube.items():
-        m = 1
-        n = 1
-        face = s.cube[key]
-        while (m == 1 and n == 1):
-            m = random.randint(0, len(face))
-            n = random.randint(0, len(face))
-
-        face = s.cube[key]
-        if face[1, 1] == face[m, n]:
-            return 0
-    return 1
-
-# check to see if random tile on each face is on correct side
-def check_random_tile(s):
-    m = random.randint(0, len(s.cube["front"]) - 1)
-    n = random.randint(0, len(s.cube["front"]) - 1)
-
-    if s.cube["front"][m,n] == 0 and s.cube["back"][m,n] == 1 and s.cube["up"][m,n] == 2 and\
-            s.cube["down"][m,n] == 3 and s.cube["left"][m,n] == 4 and s.cube["right"][m,n] == 5:
-        return 1
-
-    return 0
-
-# check to see if there rightmost vertical on each face is the same
-def check_rightmost(s):
-    for key, value in s.cube.items():
-        face = s.cube[key]
-        if len(set(face[:,-1].flatten())) > 1:
-            return 0
-
-    return 1
-
-# check to see if diagonal of face are all same color
-def check_diag(s):
-    for key, value in s.cube.items():
-        face = s.cube[key]
-        if len(set(face.diagonal().flatten())) > 1:
-            return 0
-
-    return 1
-
-def check_adjacent(cube):
-    n = len(cube)
-    val = 0
-    for i in range(n):
-        for j in range(n):
-            # u, ur, r, dr
-            if i - 1 in range(n):
-                val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
-            # if i - 1 in range(n) and j + 1 in range(n):
-            #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
-            if j + 1 in range(n):
-                val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
-            # if i + 1 in range(n) and j + 1 in range(n):
-            #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
-    return val
-
-
-# check number of adjacent pairs of same color
-def num_adj_front(s):
-    return check_adjacent(s.cube["front"])
-def num_adj_back(s):
-    return check_adjacent(s.cube["back"])
-def num_adj_left(s):
-    return check_adjacent(s.cube["left"])
-def num_adj__right(s):
-    return check_adjacent(s.cube["right"])
-def num_adj__up(s):
-    return check_adjacent(s.cube["up"])
-def num_adj__down(s):
-    return check_adjacent(s.cube["down"])
-
-# check number of unique colors
-def unique_num_front(s):
-    return len(set(s.cube["front"].flatten()))
-def unique_num_back(s):
-    return len(set(s.cube["back"].flatten()))
-def unique_num_left(s):
-    return len(set(s.cube["left"].flatten()))
-def unique_num_right(s):
-    return len(set(s.cube["right"].flatten()))
-def unique_num_up(s):
-    return len(set(s.cube["up"].flatten()))
-def unique_num_down(s):
-    return len(set(s.cube["down"].flatten()))
-
-# check number of same colors in corners
-def unique_corners_front(s):
-    return len(set(s.cube["front"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-def unique_corners_back(s):
-    return len(set(s.cube["back"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-def unique_corners_left(s):
-    return len(set(s.cube["left"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-def unique_corners_right(s):
-    return len(set(s.cube["right"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-def unique_corners_up(s):
-    return len(set(s.cube["up"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-def unique_corners_down(s):
-    return len(set(s.cube["down"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-
-
-
-def unique_list(s):
-    return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
-
-def adj_list(s):
-    return np.array([num_adj_front(s), num_adj_back(s),num_adj_left(s), num_adj__right(s), num_adj__up(s), num_adj__down(s)])
-
-def corner_list(s):
-    return np.array([unique_corners_front(s), unique_corners_back(s), unique_corners_left(s), unique_corners_right(s), unique_corners_up(s), unique_corners_down(s)])
+# # Features
+# # check corners
+# def corners(s):
+#     for key, value in s.cube.items():
+#         face = s.cube[key]
+#         if len(set(face[::face.shape[0] - 1, ::face.shape[1] - 1].flatten())) > 1:
+#             return 0
+#     return 1
+#
+# # check middle horizontal layer -- not plausible for 2x2?
+# def horiz_middle(s):
+#     for key, value in s.cube.items():
+#         face = s.cube[key]
+#         if len(set(face[1].flatten())) > 1:
+#             return 0
+#     return 1
+#
+# # check middle vertical layer -- also not plausible for 2x2?
+# def vert_middle(s):
+#     for key, value in s.cube.items():
+#         face = s.cube[key]
+#         if len(set(face[:,1].flatten())) > 1:
+#             return 0
+#     return 1
+#
+# # check to see if random tile matches middle tile -- also not plausible for 2x2?
+# def random_square_match(s):
+#     for key, value in s.cube.items():
+#         m = 1
+#         n = 1
+#         face = s.cube[key]
+#         while (m == 1 and n == 1):
+#             m = random.randint(0, len(face))
+#             n = random.randint(0, len(face))
+#
+#         face = s.cube[key]
+#         if face[1, 1] == face[m, n]:
+#             return 0
+#     return 1
+#
+# # check to see if random tile on each face is on correct side
+# def check_random_tile(s):
+#     m = random.randint(0, len(s.cube["front"]) - 1)
+#     n = random.randint(0, len(s.cube["front"]) - 1)
+#
+#     if s.cube["front"][m,n] == 0 and s.cube["back"][m,n] == 1 and s.cube["up"][m,n] == 2 and\
+#             s.cube["down"][m,n] == 3 and s.cube["left"][m,n] == 4 and s.cube["right"][m,n] == 5:
+#         return 1
+#
+#     return 0
+#
+# # check to see if there rightmost vertical on each face is the same
+# def check_rightmost(s):
+#     for key, value in s.cube.items():
+#         face = s.cube[key]
+#         if len(set(face[:,-1].flatten())) > 1:
+#             return 0
+#
+#     return 1
+#
+# # check to see if diagonal of face are all same color
+# def check_diag(s):
+#     for key, value in s.cube.items():
+#         face = s.cube[key]
+#         if len(set(face.diagonal().flatten())) > 1:
+#             return 0
+#
+#     return 1
+#
+# def check_adjacent(cube):
+#     n = len(cube)
+#     val = 0
+#     for i in range(n):
+#         for j in range(n):
+#             # u, ur, r, dr
+#             if i - 1 in range(n):
+#                 val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
+#             # if i - 1 in range(n) and j + 1 in range(n):
+#             #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
+#             if j + 1 in range(n):
+#                 val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
+#             # if i + 1 in range(n) and j + 1 in range(n):
+#             #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
+#     return val
+#
+#
+# # check number of adjacent pairs of same color
+# def num_adj_front(s):
+#     return check_adjacent(s.cube["front"])
+# def num_adj_back(s):
+#     return check_adjacent(s.cube["back"])
+# def num_adj_left(s):
+#     return check_adjacent(s.cube["left"])
+# def num_adj__right(s):
+#     return check_adjacent(s.cube["right"])
+# def num_adj__up(s):
+#     return check_adjacent(s.cube["up"])
+# def num_adj__down(s):
+#     return check_adjacent(s.cube["down"])
+#
+# # check number of unique colors
+# def unique_num_front(s):
+#     return len(set(s.cube["front"].flatten()))
+# def unique_num_back(s):
+#     return len(set(s.cube["back"].flatten()))
+# def unique_num_left(s):
+#     return len(set(s.cube["left"].flatten()))
+# def unique_num_right(s):
+#     return len(set(s.cube["right"].flatten()))
+# def unique_num_up(s):
+#     return len(set(s.cube["up"].flatten()))
+# def unique_num_down(s):
+#     return len(set(s.cube["down"].flatten()))
+#
+# # check number of same colors in corners
+# def unique_corners_front(s):
+#     return len(set(s.cube["front"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+# def unique_corners_back(s):
+#     return len(set(s.cube["back"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+# def unique_corners_left(s):
+#     return len(set(s.cube["left"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+# def unique_corners_right(s):
+#     return len(set(s.cube["right"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+# def unique_corners_up(s):
+#     return len(set(s.cube["up"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+# def unique_corners_down(s):
+#     return len(set(s.cube["down"][[0, 0, -1, -1], [0, -1, 0, -1]]))
+#
+#
+#
+# def unique_list(s):
+#     return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
+#
+# def adj_list(s):
+#     return np.array([num_adj_front(s), num_adj_back(s),num_adj_left(s), num_adj__right(s), num_adj__up(s), num_adj__down(s)])
+#
+# def corner_list(s):
+#     return np.array([unique_corners_front(s), unique_corners_back(s), unique_corners_left(s), unique_corners_right(s), unique_corners_up(s), unique_corners_down(s)])
 # Q-Learning
-
-ACTIONS = [op.name for op in OPERATORS]
-
-# Transition Function, probability of all moves is 1
-def T(s, a, sp):
-    if goal_test(s): return 0
-    else: return 1
-
-# reward function
-def R(s, a, sp):
-    if goal_test(s):
-        return 10000
-    else:
-        return -1
-
-
 class MDP_rubik:
     def __init__(self, T, R, start, actions, operators):
         self.T = T
@@ -544,7 +461,6 @@ class MDP_rubik:
         # total = sum(self.weights())
         # self.weights = [(w * 1.0)/total for w in self.weights]
 
-
     def QLearn(self, iterations, discount, learning_bias):
         total_goal = 0
         for i in range(iterations):
@@ -560,7 +476,7 @@ class MDP_rubik:
                 count += 1
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
-                total_goal +=1
+                total_goal += 1
         print("found goal state n times:", total_goal)
 
 
@@ -568,6 +484,21 @@ class MDP_rubik:
         for s in self.all_states:
             self.opt_policy[s] = self.get_best_action(s)
         return self.opt_policy
+
+
+ACTIONS = [op.name for op in OPERATORS]
+
+# Transition Function, probability of all moves is 1
+def T(s, a, sp):
+    if goal_test(s): return 0
+    else: return 1
+
+# reward function
+def R(s, a, sp):
+    if goal_test(s):
+        return 10000
+    else:
+        return -1
 
 
 state = State()
