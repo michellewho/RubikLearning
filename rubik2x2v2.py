@@ -443,6 +443,7 @@ class MDP_rubik:
     def calculate_Q(self,s ,a ,discount, w0):
         learning_rate = self.calculate_learning_rate(s, a)
         sp = self.take_action(a)
+        self.curr_state = sp
         best_action = self.get_best_action(sp)
         self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
         new_q = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
