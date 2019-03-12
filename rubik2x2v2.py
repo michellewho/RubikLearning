@@ -425,9 +425,35 @@ class MDP_rubik:
         return learning_bias
 
     # returns number of squares on correct face of cube
-    def f1(self, s):
+    def f1_old(self, s):
         return len(sum(s.cube["front"] == 0)) + len(sum(s.cube["back"] == 1)) + len(sum(s.cube["up"] == 2)) + \
                len(sum(s.cube["down"] == 3) + len(sum(s.cube["left"] == 4)) + len(sum(s.cube["right"] == 5)))
+
+    def f1(self, s):
+        total = 0
+        score_list = np.array([self.check_adjacent(s.cube["front"]), self.check_adjacent(s.cube["back"]),
+                               self.check_adjacent(s.cube["left"]), self.check_adjacent(s.cube["right"]),
+                               self.check_adjacent(s.cube["up"]), self.check_adjacent(s.cube["down"])])
+        for side in score_list:
+            total += math.pow(10, side)
+        return total
+
+    def check_adjacent(self, cube):
+        n = len(cube)
+        val = 0
+        for i in range(n):
+            for j in range(n):
+                # u, ur, r, dr
+                if i - 1 in range(n):
+                    val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
+                # if i - 1 in range(n) and j + 1 in range(n):
+                #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
+                if j + 1 in range(n):
+                    val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
+                # if i + 1 in range(n) and j + 1 in range(n):
+                #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
+        return val
+
 
     # returns number of faces that all have same color
     def f2(self, s):
@@ -442,13 +468,14 @@ class MDP_rubik:
         return count
 
 
-    def calculate_Q(self,s ,a ,discount, w0):
-        learning_rate = self.calculate_learning_rate(s, a)
+    def calculate_Q(self,s ,a ,discount, w0, learning_bias):
+        learning_rate = self.calculate_learning_rate(s, learning_bias)
         sp = self.take_action(a)
         self.curr_state = sp
         best_action = self.get_best_action(sp)
 
         self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
+
         new_q = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
 
         delta = self.R(s, a, sp) + discount * self.QValues[(sp, best_action)] - new_q
@@ -474,10 +501,11 @@ class MDP_rubik:
             self.get_weights()
             while not goal_test(self.curr_state) and count < 100:
                 s = self.curr_state
-                a = self.choose_action(s, learning_bias)
                 self.visit_count[s] = self.visit_count[s] + 1 if s in self.visit_count else 1
-                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, 1)
+                a = self.choose_action(s, learning_bias)
+                self.QValues[(s, a)] = self.calculate_Q(s, a, discount, 1, learning_bias)
                 count += 1
+
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
                 total_goal += 1
@@ -494,8 +522,7 @@ ACTIONS = [op.name for op in OPERATORS]
 
 # Transition Function, probability of all moves is 1
 def T(s, a, sp):
-    if goal_test(s): return 0
-    else: return 1
+    return 1
 
 # reward function
 def R(s, a, sp):
