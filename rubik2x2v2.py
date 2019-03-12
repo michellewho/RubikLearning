@@ -337,21 +337,21 @@ def right_op(s):
 #     return check_adjacent(s.cube["up"])
 # def num_adj__down(s):
 #     return check_adjacent(s.cube["down"])
-#
-# # check number of unique colors
-# def unique_num_front(s):
-#     return len(set(s.cube["front"].flatten()))
-# def unique_num_back(s):
-#     return len(set(s.cube["back"].flatten()))
-# def unique_num_left(s):
-#     return len(set(s.cube["left"].flatten()))
-# def unique_num_right(s):
-#     return len(set(s.cube["right"].flatten()))
-# def unique_num_up(s):
-#     return len(set(s.cube["up"].flatten()))
-# def unique_num_down(s):
-#     return len(set(s.cube["down"].flatten()))
-#
+
+# check number of unique colors
+def unique_num_front(s):
+    return len(set(s.cube["front"].flatten()))
+def unique_num_back(s):
+    return len(set(s.cube["back"].flatten()))
+def unique_num_left(s):
+    return len(set(s.cube["left"].flatten()))
+def unique_num_right(s):
+    return len(set(s.cube["right"].flatten()))
+def unique_num_up(s):
+    return len(set(s.cube["up"].flatten()))
+def unique_num_down(s):
+    return len(set(s.cube["down"].flatten()))
+
 # # check number of same colors in corners
 # def unique_corners_front(s):
 #     return len(set(s.cube["front"][[0, 0, -1, -1], [0, -1, 0, -1]]))
@@ -368,8 +368,8 @@ def right_op(s):
 #
 #
 #
-# def unique_list(s):
-#     return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
+def unique_list(s):
+    return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
 #
 # def adj_list(s):
 #     return np.array([num_adj_front(s), num_adj_back(s),num_adj_left(s), num_adj__right(s), num_adj__up(s), num_adj__down(s)])
@@ -456,7 +456,7 @@ class MDP_rubik:
 
 
     # returns number of faces that all have same color
-    def f2(self, s):
+    def f2_old(self, s):
         count = 0
         count += 1 if len(set(s.cube["front"].flatten())) == 1 else 0
         count += 1 if len(set(s.cube["back"].flatten())) == 1 else 0
@@ -466,6 +466,13 @@ class MDP_rubik:
         count += 1 if len(set(s.cube["down"].flatten())) == 1 else 0
 
         return count
+
+    def f2(self, s):
+        total = 0
+        score_list = unique_list(s)
+        for side in score_list:
+            total += math.pow(10, 5 - side)
+        return total
 
 
     def calculate_Q(self,s ,a ,discount, w0, learning_bias):
@@ -500,7 +507,7 @@ class MDP_rubik:
             self.curr_state = self.start_state
             self.all_states.add(self.start_state)
             self.get_weights()
-            while not goal_test(self.curr_state) and count < 100:
+            while not goal_test(self.curr_state) and count < 50:
                 s = self.curr_state
                 self.visit_count[s] = self.visit_count[s] + 1 if s in self.visit_count else 1
                 a = self.choose_action(s, learning_bias)
