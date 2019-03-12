@@ -53,13 +53,13 @@ class State:
     def __str__(self):
         # Produces a textual description of a state.
         # Might not be needed in normal operation with GUIs.
-        txt = "\n"
-        txt += str(self.cube["front"])
-        txt += str(self.cube["back"])
-        txt += str(self.cube["left"])
-        txt += str(self.cube["right"])
-        txt += str(self.cube["up"])
-        txt += str(self.cube["down"])
+        txt = ""
+        txt += "Front:\n " + str(self.cube["front"]) + "\n"
+        txt += "Back:\n " + str(self.cube["back"]) + "\n"
+        txt += "Left:\n " + str(self.cube["left"]) + "\n"
+        txt += "Right:\n " + str(self.cube["right"]) + "\n"
+        txt += "Up:\n " + str(self.cube["up"]) + "\n"
+        txt += "Down:\n " + str(self.cube["down"]) + "\n"
         return txt
 
     def __hash__(self):
@@ -456,7 +456,7 @@ class MDP_rubik:
 
 
     # returns number of faces that all have same color
-    def f2_old(self, s):
+    def f2(self, s):
         count = 0
         count += 1 if len(set(s.cube["front"].flatten())) == 1 else 0
         count += 1 if len(set(s.cube["back"].flatten())) == 1 else 0
@@ -467,7 +467,7 @@ class MDP_rubik:
 
         return count
 
-    def f2(self, s):
+    def f2_new(self, s):
         total = 0
         score_list = unique_list(s)
         for side in score_list:
@@ -541,17 +541,43 @@ def R(s, a, sp):
 
 
 state = State()
-CREATE_INITIAL_STATE = state.shuffle_cube(15)
-print(str(CREATE_INITIAL_STATE))
 
+print("Customize the MDP learning below, or press enter all the way through for defaults")
+
+num_shuff = input("How many times should I shuffle?: ")
+MDP_iteration = input("How many iterations of learning?: ")
+MDP_discount = input("Whats the discount?: ")
+MDP_learning_rate = input("Whats the learning_rate?: ")
+
+if num_shuff == "":
+    num_shuff = 15
+else:
+    num_shuff = int(num_shuff)
+
+if MDP_iteration == "":
+    MDP_iteration = 25
+else:
+    MDP_iteration = int(MDP_iteration)
+
+if MDP_discount == "":
+    MDP_discount = 1
+else:
+    MDP_discount = float(MDP_discount)
+
+if MDP_learning_rate == "":
+    MDP_learning_rate = .2
+else:
+    MDP_learning_rate = float(MDP_learning_rate)
+
+
+
+
+CREATE_INITIAL_STATE = state.shuffle_cube(num_shuff)
+print(str(CREATE_INITIAL_STATE))
 print(ACTIONS)
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(25, 1, .2)
+mdp.QLearn(MDP_iteration, MDP_discount, MDP_learning_rate)
 policy_dict = mdp.getPolicyDict()
-
-# curr_state = CREATE_INITIAL_STATE
-# while not goal_test(curr_state):
-#     print(policy_dict[curr_state])
-#     for operator in OPERATORS:
-#         if operator.name == policy_dict[curr_state]:
-#             curr_state = operator.apply(curr_state)
+best_first_action = policy_dict[CREATE_INITIAL_STATE]
+print("Policy recommends a best first action of:", best_first_action)
+print("Q Value of:", mdp.QValues[(CREATE_INITIAL_STATE, best_first_action)])
