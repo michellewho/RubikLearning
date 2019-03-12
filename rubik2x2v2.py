@@ -12,12 +12,9 @@ PROBLEM_DESC = \
     '''
 
 import numpy as np
-import json
 import random
 import copy
 import math
-from queue import PriorityQueue
-from itertools import count
 
 
 # </METADATA>
@@ -99,25 +96,7 @@ class Operator:
 
 # </COMMON_CODE>
 
-# <INITIAL_STATE>
-# Use default, but override if new value supplied
-# by the user on the command line.
-# try:
-#     import sys
-#     init_state_string = sys.argv[2]
-#     print("Initial state as given on the command line: " + init_state_string)
-#     init_state_list = eval(init_state_string)
-#     ## TODO Make cube from passed in list
-#
-# except:
-#     state = State()
-#     state = state.shuffle_cube()
-#     CREATE_INITIAL_STATE = state
-
-# </INITIAL_STATE>
-
 # <OPERATORS>
-
 OPERATORS = []
 OPERATORS.append(Operator("Rotate Up", lambda s: up_op(up_op(s))))
 OPERATORS.append(Operator("Rotate Down", lambda s: down_op(down_op(s))))
@@ -239,105 +218,6 @@ def right_op(s):
     return ns
 
 # # Features
-# # check corners
-# def corners(s):
-#     for key, value in s.cube.items():
-#         face = s.cube[key]
-#         if len(set(face[::face.shape[0] - 1, ::face.shape[1] - 1].flatten())) > 1:
-#             return 0
-#     return 1
-#
-# # check middle horizontal layer -- not plausible for 2x2?
-# def horiz_middle(s):
-#     for key, value in s.cube.items():
-#         face = s.cube[key]
-#         if len(set(face[1].flatten())) > 1:
-#             return 0
-#     return 1
-#
-# # check middle vertical layer -- also not plausible for 2x2?
-# def vert_middle(s):
-#     for key, value in s.cube.items():
-#         face = s.cube[key]
-#         if len(set(face[:,1].flatten())) > 1:
-#             return 0
-#     return 1
-#
-# # check to see if random tile matches middle tile -- also not plausible for 2x2?
-# def random_square_match(s):
-#     for key, value in s.cube.items():
-#         m = 1
-#         n = 1
-#         face = s.cube[key]
-#         while (m == 1 and n == 1):
-#             m = random.randint(0, len(face))
-#             n = random.randint(0, len(face))
-#
-#         face = s.cube[key]
-#         if face[1, 1] == face[m, n]:
-#             return 0
-#     return 1
-#
-# # check to see if random tile on each face is on correct side
-# def check_random_tile(s):
-#     m = random.randint(0, len(s.cube["front"]) - 1)
-#     n = random.randint(0, len(s.cube["front"]) - 1)
-#
-#     if s.cube["front"][m,n] == 0 and s.cube["back"][m,n] == 1 and s.cube["up"][m,n] == 2 and\
-#             s.cube["down"][m,n] == 3 and s.cube["left"][m,n] == 4 and s.cube["right"][m,n] == 5:
-#         return 1
-#
-#     return 0
-#
-# # check to see if there rightmost vertical on each face is the same
-# def check_rightmost(s):
-#     for key, value in s.cube.items():
-#         face = s.cube[key]
-#         if len(set(face[:,-1].flatten())) > 1:
-#             return 0
-#
-#     return 1
-#
-# # check to see if diagonal of face are all same color
-# def check_diag(s):
-#     for key, value in s.cube.items():
-#         face = s.cube[key]
-#         if len(set(face.diagonal().flatten())) > 1:
-#             return 0
-#
-#     return 1
-#
-# def check_adjacent(cube):
-#     n = len(cube)
-#     val = 0
-#     for i in range(n):
-#         for j in range(n):
-#             # u, ur, r, dr
-#             if i - 1 in range(n):
-#                 val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
-#             # if i - 1 in range(n) and j + 1 in range(n):
-#             #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
-#             if j + 1 in range(n):
-#                 val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
-#             # if i + 1 in range(n) and j + 1 in range(n):
-#             #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
-#     return val
-#
-#
-# # check number of adjacent pairs of same color
-# def num_adj_front(s):
-#     return check_adjacent(s.cube["front"])
-# def num_adj_back(s):
-#     return check_adjacent(s.cube["back"])
-# def num_adj_left(s):
-#     return check_adjacent(s.cube["left"])
-# def num_adj__right(s):
-#     return check_adjacent(s.cube["right"])
-# def num_adj__up(s):
-#     return check_adjacent(s.cube["up"])
-# def num_adj__down(s):
-#     return check_adjacent(s.cube["down"])
-
 # check number of unique colors
 def unique_num_front(s):
     return len(set(s.cube["front"].flatten()))
@@ -352,30 +232,8 @@ def unique_num_up(s):
 def unique_num_down(s):
     return len(set(s.cube["down"].flatten()))
 
-# # check number of same colors in corners
-# def unique_corners_front(s):
-#     return len(set(s.cube["front"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-# def unique_corners_back(s):
-#     return len(set(s.cube["back"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-# def unique_corners_left(s):
-#     return len(set(s.cube["left"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-# def unique_corners_right(s):
-#     return len(set(s.cube["right"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-# def unique_corners_up(s):
-#     return len(set(s.cube["up"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-# def unique_corners_down(s):
-#     return len(set(s.cube["down"][[0, 0, -1, -1], [0, -1, 0, -1]]))
-#
-#
-#
 def unique_list(s):
     return np.array([unique_num_front(s), unique_num_back(s),unique_num_left(s), unique_num_right(s), unique_num_up(s), unique_num_down(s)])
-#
-# def adj_list(s):
-#     return np.array([num_adj_front(s), num_adj_back(s),num_adj_left(s), num_adj__right(s), num_adj__up(s), num_adj__down(s)])
-#
-# def corner_list(s):
-#     return np.array([unique_corners_front(s), unique_corners_back(s), unique_corners_left(s), unique_corners_right(s), unique_corners_up(s), unique_corners_down(s)])
 # Q-Learning
 class MDP_rubik:
     def __init__(self, T, R, start, actions, operators):
@@ -424,11 +282,6 @@ class MDP_rubik:
             return 1 / self.visit_count[s]
         return learning_bias
 
-    # returns number of squares on correct face of cube
-    def f1_old(self, s):
-        return len(sum(s.cube["front"] == 0)) + len(sum(s.cube["back"] == 1)) + len(sum(s.cube["up"] == 2)) + \
-               len(sum(s.cube["down"] == 3) + len(sum(s.cube["left"] == 4)) + len(sum(s.cube["right"] == 5)))
-
     def f1(self, s):
         total = 0
         score_list = np.array([self.check_adjacent(s.cube["front"]), self.check_adjacent(s.cube["back"]),
@@ -443,17 +296,11 @@ class MDP_rubik:
         val = 0
         for i in range(n):
             for j in range(n):
-                # u, ur, r, dr
                 if i - 1 in range(n):
                     val = val + (0 if len(set([cube[i][j], cube[i - 1][j]])) > 1 else 1)
-                # if i - 1 in range(n) and j + 1 in range(n):
-                #     val = val + (0 if len(set([cube[i][j], cube[i - 1][j + 1]])) > 1 else 1)
                 if j + 1 in range(n):
                     val = val + (0 if len(set([cube[i][j], cube[i][j + 1]])) > 1 else 1)
-                # if i + 1 in range(n) and j + 1 in range(n):
-                #     val = val + (0 if len(set([cube[i][j], cube[i + 1][j + 1]])) > 1 else 1)
         return val
-
 
     # returns number of faces that all have same color
     def f2(self, s):
@@ -466,14 +313,6 @@ class MDP_rubik:
         count += 1 if len(set(s.cube["down"].flatten())) == 1 else 0
 
         return count
-
-    def f2_new(self, s):
-        total = 0
-        score_list = unique_list(s)
-        for side in score_list:
-            total += math.pow(10, 5 - side)
-        return total
-
 
     def calculate_Q(self,s ,a ,discount, w0, learning_bias):
         learning_rate = self.calculate_learning_rate(s, learning_bias)
@@ -495,7 +334,7 @@ class MDP_rubik:
         self.weights[0] = self.weights[0] + learning_rate * delta * self.f1(s)
         self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
 
-        # do we need to normalize?
+
         total = sum(self.weights)
         self.weights = [(w * 1.0)/total for w in self.weights]
 
@@ -517,6 +356,7 @@ class MDP_rubik:
             if goal_test(self.curr_state):
                 print("QLearn got to goal state")
                 total_goal += 1
+
         print("found goal state n times:", total_goal)
 
 
@@ -546,8 +386,8 @@ print("Customize the MDP learning below, or press enter all the way through for 
 
 num_shuff = input("How many times should I shuffle?: ")
 MDP_iteration = input("How many iterations of learning?: ")
-MDP_discount = input("Whats the discount?: ")
-MDP_learning_rate = input("Whats the learning_rate?: ")
+MDP_discount = input("What is the discount?: ")
+MDP_learning_rate = input("What is the learning_rate?: ")
 
 if num_shuff == "":
     num_shuff = 15
