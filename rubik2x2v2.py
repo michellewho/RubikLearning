@@ -489,8 +489,8 @@ class MDP_rubik:
         self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
 
         # do we need to normalize?
-        # total = sum(self.weights)
-        # self.weights = [(w * 1.0)/total for w in self.weights]
+        total = sum(self.weights)
+        self.weights = [(w * 1.0)/total for w in self.weights]
 
     def QLearn(self, iterations, discount, learning_bias):
         total_goal = 0
@@ -498,6 +498,7 @@ class MDP_rubik:
             print(i)
             count = 0
             self.curr_state = self.start_state
+            self.all_states.add(self.start_state)
             self.get_weights()
             while not goal_test(self.curr_state) and count < 100:
                 s = self.curr_state
@@ -538,7 +539,7 @@ print(str(CREATE_INITIAL_STATE))
 
 print(ACTIONS)
 mdp = MDP_rubik(T, R, CREATE_INITIAL_STATE, ACTIONS, OPERATORS)
-mdp.QLearn(25, .8, .2)
+mdp.QLearn(25, 1, .2)
 policy_dict = mdp.getPolicyDict()
 
 # curr_state = CREATE_INITIAL_STATE
