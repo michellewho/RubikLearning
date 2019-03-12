@@ -413,14 +413,16 @@ class MDP_rubik:
 
     def choose_action(self, s, learning_bias):
         best_action = None
-        if random.random() > learning_bias:
+        if random.random() > self.calculate_learning_rate(s, learning_bias):
             best_action = self.get_best_action(s)
         if best_action is None:
             best_action = random.choice(ACTIONS)
         return best_action
 
-    def calculate_learning_rate(self, s, a):
-        return 1 / self.visit_count[(s, a)]
+    def calculate_learning_rate(self, s, learning_bias):
+        if s in self.visit_count:
+            return 1 / self.visit_count[s]
+        return learning_bias
 
     # returns number of squares on correct face of cube
     def f1(self, s):
@@ -445,6 +447,7 @@ class MDP_rubik:
         sp = self.take_action(a)
         self.curr_state = sp
         best_action = self.get_best_action(sp)
+
         self.QValues[(sp, best_action)] = w0 + self.weights[0] * self.f1(sp) + self.weights[1] * self.f2(sp)
         new_q = w0 + self.weights[0] * self.f1(s) + self.weights[1] * self.f2(s)
 
@@ -459,7 +462,7 @@ class MDP_rubik:
         self.weights[1] = self.weights[1] + learning_rate * delta * self.f2(s)
 
         # do we need to normalize?
-        # total = sum(self.weights())
+        # total = sum(self.weights)
         # self.weights = [(w * 1.0)/total for w in self.weights]
 
     def QLearn(self, iterations, discount, learning_bias):
@@ -469,10 +472,10 @@ class MDP_rubik:
             count = 0
             self.curr_state = self.start_state
             self.get_weights()
-            while not goal_test(self.curr_state) and count < 50:
+            while not goal_test(self.curr_state) and count < 100:
                 s = self.curr_state
                 a = self.choose_action(s, learning_bias)
-                self.visit_count[(s, a)] = self.visit_count[(s, a)] + 1 if (s, a) in self.visit_count else 1
+                self.visit_count[s] = self.visit_count[s] + 1 if s in self.visit_count else 1
                 self.QValues[(s, a)] = self.calculate_Q(s, a, discount, 1)
                 count += 1
             if goal_test(self.curr_state):
@@ -496,7 +499,7 @@ def T(s, a, sp):
 
 # reward function
 def R(s, a, sp):
-    if goal_test(s):
+    if goal_test(sp):
         return 10000
     else:
         return -1
